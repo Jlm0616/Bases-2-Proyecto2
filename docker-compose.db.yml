@@ -1,0 +1,60 @@
+services:
+  sql-sanjose:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: sql-sanjose
+    hostname: sql-sanjose
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sanjose-data:/var/opt/mssql
+      - ./backups:/backups
+    networks:
+      - bases2-red
+
+  sql-limon:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: sql-limon
+    hostname: sql-limon
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1434:1433"
+    volumes:
+      - limon-data:/var/opt/mssql
+      - ./backups:/backups
+    networks:
+      - bases2-red
+
+  sql-corp:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: sql-corp
+    hostname: sql-corp
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1435:1433"
+    volumes:
+      - corp-data:/var/opt/mssql
+      - ./backups:/backups
+    networks:
+      - bases2-red
+
+volumes:
+  sanjose-data:
+  limon-data:
+  corp-data:
+
+networks:
+  bases2-red:
+    external: true
