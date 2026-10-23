@@ -1,30 +1,62 @@
 const { sql, conectarBD } = require('../config/db');
 
 /**
- * Lista proveedores con filtros opcionales
+ * Lista proveedores con filtros opcionales y paginación
  * @param {Object} req - Objeto de solicitud Express
  * @param {Object} req.body - Cuerpo de la solicitud
  * @param {string} [req.body.nombre] - Nombre del proveedor para filtrar
  * @param {number} [req.body.idCategoria] - ID de categoría para filtrar
+ * @param {number} [req.body.page] - Número de página (default: 1)
+ * @param {number} [req.body.pageSize] - Tamaño de página (default: 25)
  * @param {Object} res - Objeto de respuesta Express
- * @returns {Promise<void>} Devuelve array de proveedores
+ * @returns {Promise<void>} Devuelve estructura paginada de proveedores
  */
 async function listarProveedores(req, res) {
   try {
     const {
       nombre = null,
-      idCategoria = null
+      idCategoria = null,
+      page = 1,
+      pageSize = 25
     } = req.body;
 
     const conexion = await conectarBD();
 
-    const resultado = await conexion
-      .request()
-      .input('Nombre', sql.NVarChar(100), nombre)
-      .input('CategoriaID', sql.Int, idCategoria)
-      .execute('Prov_sp_ListarProveedores');
+    // Validar y sanitizar parámetros de paginación
+    const pageNumber = Math.max(1, Number(page));
+    const pageSizeNumber = Math.min(1000, Math.max(1, Number(pageSize)));
 
-    res.json(resultado.recordset);
+    // Ejecutar consulta paginada y conteo en paralelo
+    const [resultadoPaginado, resultadoConteo] = await Promise.all([
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('CategoriaID', sql.Int, idCategoria)
+        .input('PageNumber', sql.Int, pageNumber)
+        .input('PageSize', sql.Int, pageSizeNumber)
+        .execute('Prov_sp_ListarProveedoresPaginado'),
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('CategoriaID', sql.Int, idCategoria)
+        .execute('Prov_sp_ContarProveedores')
+    ]);
+
+    const totalRecords = resultadoConteo.recordset[0]?.Total || 0;
+    const totalPages = Math.ceil(totalRecords / pageSizeNumber);
+
+    // Manejar páginas fuera de rango
+    const adjustedPage = pageNumber > totalPages && totalPages > 0 ? totalPages : pageNumber;
+
+    res.json({
+      data: resultadoPaginado.recordset,
+      pagination: {
+        page: adjustedPage,
+        pageSize: pageSizeNumber,
+        totalRecords: totalRecords,
+        totalPages: totalPages
+      }
+    });
 
   } catch (error) {
     console.error('Error al listar proveedores:', error);

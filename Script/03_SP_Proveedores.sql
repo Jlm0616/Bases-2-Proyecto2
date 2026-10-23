@@ -7,29 +7,38 @@ GO
 --
 -- Descripción:
 --   Contiene los procedimientos almacenados para la gestión de proveedores,
---   incluyendo listado con filtros y detalle completo de un proveedor específico.
+--   incluyendo listado con filtros, paginación y detalle completo de un proveedor específico.
 -- ============================================================================
 
 -- ============================================================================
--- Stored Procedure: Prov_sp_ListarProveedores
--- Descripción: Lista proveedores con filtros acumulativos opcionales
--- Uso: Consulta de proveedores con filtros de búsqueda flexibles
+-- Stored Procedure: Prov_sp_ListarProveedoresPaginado
+-- Descripción: Lista proveedores con filtros acumulativos y paginación
+-- Uso: Consulta de proveedores con filtros de búsqueda flexibles y paginación
 -- Parámetros:
 --   @Nombre: Filtro por nombre del proveedor (búsqueda parcial, LIKE)
 --   @CategoriaID: Filtro por categoría de proveedor (exacto)
--- Ordenamiento: Nombre del proveedor ascendente
+--   @PageNumber: Número de página a mostrar (por defecto: 1)
+--   @PageSize: Cantidad de registros por página (por defecto: 25, máximo: 1000)
+-- Ordenamiento: Nombre del proveedor ascendente, ID del proveedor ascendente (tiebreaker)
 -- Columnas retornadas:
 --   - IdProveedor: Identificador único del proveedor
 --   - NombreProveedor: Nombre del proveedor
 --   - CategoriaProveedor: Categoría a la que pertenece el proveedor
 --   - MetodoEntrega: Método de entrega preferido
 -- ============================================================================
-CREATE OR ALTER PROCEDURE Prov_sp_ListarProveedores
+CREATE OR ALTER PROCEDURE Prov_sp_ListarProveedoresPaginado
     @Nombre       NVARCHAR(100) = NULL,
-    @CategoriaID  INT           = NULL
+    @CategoriaID  INT           = NULL,
+    @PageNumber   INT           = 1,
+    @PageSize     INT           = 25
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    -- Sanitizar parámetros
+    IF @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize < 1 SET @PageSize = 25;
+    IF @PageSize > 1000 SET @PageSize = 1000;
 
     SELECT
         P.SupplierID              AS IdProveedor,
@@ -41,7 +50,36 @@ BEGIN
     LEFT JOIN Gen_MetodosEntrega       AS DM ON DM.DeliveryMethodID   = P.DeliveryMethodID
     WHERE (@Nombre      IS NULL OR P.SupplierName LIKE '%' + @Nombre + '%')
       AND (@CategoriaID IS NULL OR P.SupplierCategoryID = @CategoriaID)
-    ORDER BY P.SupplierName ASC;
+    ORDER BY P.SupplierName ASC, P.SupplierID ASC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+
+-- ============================================================================
+-- Stored Procedure: Prov_sp_ContarProveedores
+-- Descripción: Cuenta el total de proveedores que cumplen con los filtros
+-- Uso: Calcula el total de registros para implementar paginación
+-- Parámetros:
+--   @Nombre: Filtro por nombre del proveedor (búsqueda parcial, LIKE)
+--   @CategoriaID: Filtro por categoría de proveedor (exacto)
+-- Columnas retornadas:
+--   - Total: Cantidad total de registros que cumplen los filtros
+-- ============================================================================
+CREATE OR ALTER PROCEDURE Prov_sp_ContarProveedores
+    @Nombre       NVARCHAR(100) = NULL,
+    @CategoriaID  INT           = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT COUNT(*) AS Total
+    FROM Prov_Proveedores AS P
+    LEFT JOIN Prov_CategoriasProveedor AS PC ON PC.SupplierCategoryID = P.SupplierCategoryID
+    LEFT JOIN Gen_MetodosEntrega       AS DM ON DM.DeliveryMethodID   = P.DeliveryMethodID
+    WHERE (@Nombre      IS NULL OR P.SupplierName LIKE '%' + @Nombre + '%')
+      AND (@CategoriaID IS NULL OR P.SupplierCategoryID = @CategoriaID);
 END
 GO
 
@@ -106,7 +144,7 @@ BEGIN
         P.WebsiteURL                     AS SitioWeb,
         P.DeliveryAddressLine1           AS DireccionEntregaLinea1,
         P.DeliveryAddressLine2           AS DireccionEntregaLinea2,
-        P.PostalAddressLine1             AS DireccionPostalLinea1,
+        P.PostalAddressLine1             AS DireccionPostalLine1,
         P.PostalAddressLine2             AS DireccionPostalLine2,
         P.PostalPostalCode               AS CodigoPostalPostal,
         P.DeliveryLocation.STAsText()    AS UbicacionEntregaMapa,

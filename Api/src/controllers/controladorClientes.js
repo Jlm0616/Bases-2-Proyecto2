@@ -1,33 +1,66 @@
 const { sql, conectarBD } = require('../config/db');
 
 /**
- * Lista clientes con filtros opcionales
+ * Lista clientes con filtros opcionales y paginación
  * @param {Object} req - Objeto de solicitud Express
  * @param {Object} req.body - Cuerpo de la solicitud
  * @param {string} [req.body.nombre] - Nombre del cliente para filtrar
  * @param {number} [req.body.idCategoria] - ID de categoría para filtrar
  * @param {number} [req.body.idMetodoEntrega] - ID de método de entrega para filtrar
+ * @param {number} [req.body.page] - Número de página (default: 1)
+ * @param {number} [req.body.pageSize] - Tamaño de página (default: 25)
  * @param {Object} res - Objeto de respuesta Express
- * @returns {Promise<void>} Devuelve array de clientes
+ * @returns {Promise<void>} Devuelve estructura paginada de clientes
  */
 async function listarClientes(req, res) {
   try {
     const {
       nombre = null,
       idCategoria = null,
-      idMetodoEntrega = null
+      idMetodoEntrega = null,
+      page = 1,
+      pageSize = 25
     } = req.body;
 
     const conexion = await conectarBD();
 
-    const resultado = await conexion
-      .request()
-      .input('Nombre', sql.NVarChar(100), nombre)
-      .input('CategoriaID', sql.Int, idCategoria)
-      .input('MetodoEntregaID', sql.Int, idMetodoEntrega)
-      .execute('Cli_sp_ListarClientes');
+    // Validar y sanitizar parámetros de paginación
+    const pageNumber = Math.max(1, Number(page));
+    const pageSizeNumber = Math.min(1000, Math.max(1, Number(pageSize)));
 
-    res.json(resultado.recordset);
+    // Ejecutar consulta paginada y conteo en paralelo
+    const [resultadoPaginado, resultadoConteo] = await Promise.all([
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('CategoriaID', sql.Int, idCategoria)
+        .input('MetodoEntregaID', sql.Int, idMetodoEntrega)
+        .input('PageNumber', sql.Int, pageNumber)
+        .input('PageSize', sql.Int, pageSizeNumber)
+        .execute('Cli_sp_ListarClientesPaginado'),
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('CategoriaID', sql.Int, idCategoria)
+        .input('MetodoEntregaID', sql.Int, idMetodoEntrega)
+        .execute('Cli_sp_ContarClientes')
+    ]);
+
+    const totalRecords = resultadoConteo.recordset[0]?.Total || 0;
+    const totalPages = Math.ceil(totalRecords / pageSizeNumber);
+
+    // Manejar páginas fuera de rango
+    const adjustedPage = pageNumber > totalPages && totalPages > 0 ? totalPages : pageNumber;
+
+    res.json({
+      data: resultadoPaginado.recordset,
+      pagination: {
+        page: adjustedPage,
+        pageSize: pageSizeNumber,
+        totalRecords: totalRecords,
+        totalPages: totalPages
+      }
+    });
 
   } catch (error) {
     console.error('Error al listar clientes:', error);

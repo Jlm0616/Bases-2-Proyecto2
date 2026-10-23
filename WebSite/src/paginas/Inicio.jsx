@@ -38,11 +38,11 @@ function Inicio() {
         respuestaProductos,
         respuestaVentas,
       ] = await Promise.all([
-        buscarClientes({ nombre: "", idCategoria: null, idMetodoEntrega: null }),
+        buscarClientes({ nombre: "", idCategoria: null, idMetodoEntrega: null, page: 1, pageSize: 1 }),
 
-        buscarProveedores({ nombre: "", idCategoria: null }),
+        buscarProveedores({ nombre: "", idCategoria: null, page: 1, pageSize: 1 }),
 
-        buscarProductos({ nombre: "", idGrupo: null }),
+        buscarProductos({ nombre: "", idGrupo: null, page: 1, pageSize: 1 }),
 
         buscarVentas({
           nombreCliente: null,
@@ -56,9 +56,9 @@ function Inicio() {
       ]);
 
       setResumen({
-        clientes: Array.isArray(respuestaClientes) ? respuestaClientes.length : 0,
-        proveedores: Array.isArray(respuestaProveedores) ? respuestaProveedores.length : 0,
-        productos: Array.isArray(respuestaProductos) ? respuestaProductos.length : 0,
+        clientes: respuestaClientes.pagination?.totalRecords || 0,
+        proveedores: respuestaProveedores.pagination?.totalRecords || 0,
+        productos: respuestaProductos.pagination?.totalRecords || 0,
         ventas: respuestaVentas.total || 0,
       });
 

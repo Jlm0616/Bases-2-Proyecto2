@@ -7,7 +7,7 @@ GO
 --
 -- Descripción:
 --   Contiene los procedimientos almacenados para la gestión de productos,
---   incluyendo listado con filtros y detalle completo de un producto específico.
+--   incluyendo listado con filtros, paginación y detalle completo de un producto específico.
 --
 -- Dependencias:
 --   - Inv_Articulos: Tabla principal de productos
@@ -20,26 +20,35 @@ GO
 -- ============================================================================
 
 -- ============================================================================
--- Stored Procedure: Inv_sp_ListarProductos
--- Descripción: Lista productos con filtros acumulativos opcionales
--- Uso: Consulta de productos con filtros de búsqueda flexibles
+-- Stored Procedure: Inv_sp_ListarProductosPaginado
+-- Descripción: Lista productos con filtros acumulativos y paginación
+-- Uso: Consulta de productos con filtros de búsqueda flexibles y paginación
 -- Nota: Agrupa múltiples grupos por producto usando STRING_AGG
 -- Parámetros:
 --   @Nombre: Filtro por nombre del producto (búsqueda parcial, LIKE)
 --   @GrupoID: Filtro por grupo de producto (exacto)
--- Ordenamiento: Nombre del producto ascendente
+--   @PageNumber: Número de página a mostrar (por defecto: 1)
+--   @PageSize: Cantidad de registros por página (por defecto: 25, máximo: 1000)
+-- Ordenamiento: Nombre del producto ascendente, ID del producto ascendente (tiebreaker)
 -- Columnas retornadas:
 --   - IdProducto: Identificador único del producto
 --   - NombreProducto: Nombre del producto
 --   - GrupoProducto: Grupos a los que pertenece el producto (separados por coma)
 --   - CantidadEnInventario: Cantidad disponible en inventario
 -- ============================================================================
-CREATE OR ALTER PROCEDURE Inv_sp_ListarProductos
+CREATE OR ALTER PROCEDURE Inv_sp_ListarProductosPaginado
     @Nombre    NVARCHAR(100) = NULL,
-    @GrupoID   INT           = NULL
+    @GrupoID   INT           = NULL,
+    @PageNumber INT          = 1,
+    @PageSize  INT          = 25
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    -- Sanitizar parámetros
+    IF @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize < 1 SET @PageSize = 25;
+    IF @PageSize > 1000 SET @PageSize = 1000;
 
     SELECT
         SI.StockItemID                                  AS IdProducto,
@@ -59,7 +68,40 @@ BEGIN
                 AND AG2.StockGroupID = @GrupoID
           ))
     GROUP BY SI.StockItemID, SI.StockItemName
-    ORDER BY SI.StockItemName ASC;
+    ORDER BY SI.StockItemName ASC, SI.StockItemID ASC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+
+-- ============================================================================
+-- Stored Procedure: Inv_sp_ContarProductos
+-- Descripción: Cuenta el total de productos que cumplen con los filtros
+-- Uso: Calcula el total de registros para implementar paginación
+-- Parámetros:
+--   @Nombre: Filtro por nombre del producto (búsqueda parcial, LIKE)
+--   @GrupoID: Filtro por grupo de producto (exacto)
+-- Columnas retornadas:
+--   - Total: Cantidad total de registros que cumplen los filtros
+-- ============================================================================
+CREATE OR ALTER PROCEDURE Inv_sp_ContarProductos
+    @Nombre    NVARCHAR(100) = NULL,
+    @GrupoID   INT           = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT COUNT(*) AS Total
+    FROM Inv_Articulos AS SI
+    LEFT JOIN Inv_ArticuloGrupo AS AG ON AG.StockItemID = SI.StockItemID
+    WHERE (@Nombre  IS NULL OR SI.StockItemName LIKE '%' + @Nombre + '%')
+      AND (@GrupoID IS NULL OR EXISTS (
+              SELECT 1
+              FROM Inv_ArticuloGrupo AS AG2
+              WHERE AG2.StockItemID = SI.StockItemID
+                AND AG2.StockGroupID = @GrupoID
+          ));
 END
 GO
 

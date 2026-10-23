@@ -61,6 +61,8 @@ function Clientes() {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [tamanoPagina, setTamanoPagina] = useState(25);
+  const [totalRegistros, setTotalRegistros] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
 
   // Modal detalle
   const [modalDetalleAbierto, setModalDetalleAbierto] = useState(false);
@@ -80,7 +82,7 @@ function Clientes() {
   const [clienteEliminando, setClienteEliminando] = useState(null);
   const [eliminando, setEliminando] = useState(false);
 
-  async function cargarClientes(filtrosOverride) {
+  async function cargarClientes(filtrosOverride, pagina = paginaActual, tamano = tamanoPagina) {
     try {
       setCargando(true);
       setError("");
@@ -90,11 +92,17 @@ function Clientes() {
         idCategoria: categoria === "" ? null : Number(categoria),
         idMetodoEntrega:
           metodoEntrega === "" ? null : Number(metodoEntrega),
+        page: pagina,
+        pageSize: tamano,
       };
 
-      const datos = await buscarClientes(filtros);
-      setClientes(datos);
-      setPaginaActual(1);
+      const respuesta = await buscarClientes(filtros);
+
+      // El backend siempre devuelve { data, pagination }
+      setClientes(respuesta.data || []);
+      setTotalRegistros(respuesta.pagination?.totalRecords || 0);
+      setTotalPaginas(respuesta.pagination?.totalPages || 0);
+      setPaginaActual(respuesta.pagination?.page || 1);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -102,19 +110,16 @@ function Clientes() {
     }
   }
 
-  const totalPaginas = Math.ceil(clientes.length / tamanoPagina);
-  const indiceInicial = (paginaActual - 1) * tamanoPagina;
-  const indiceFinal = indiceInicial + tamanoPagina;
-  const clientesPaginados = clientes.slice(indiceInicial, indiceFinal);
-
   function irPagina(nuevaPagina) {
     if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
     setPaginaActual(nuevaPagina);
+    cargarClientes(null, nuevaPagina, tamanoPagina);
   }
 
   function cambiarTamanoPagina(nuevoTamano) {
     setTamanoPagina(nuevoTamano);
     setPaginaActual(1);
+    cargarClientes(null, 1, nuevoTamano);
   }
 
   function generarPaginas() {
@@ -163,7 +168,9 @@ function Clientes() {
       nombre: "",
       idCategoria: null,
       idMetodoEntrega: null,
-    });
+      page: 1,
+      pageSize: tamanoPagina,
+    }, 1, tamanoPagina);
     cargarCatalogos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -171,17 +178,20 @@ function Clientes() {
   // DEBOUNCE: buscar automáticamente 400ms después de la última tecla
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaActual(1);
       cargarClientes({
         nombre: nombre,
         idCategoria: categoria === "" ? null : Number(categoria),
         idMetodoEntrega:
           metodoEntrega === "" ? null : Number(metodoEntrega),
-      });
+        page: 1,
+        pageSize: tamanoPagina,
+      }, 1, tamanoPagina);
     }, 400);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nombre, categoria, metodoEntrega]);
+  }, [nombre, categoria, metodoEntrega, tamanoPagina]);
 
   async function limpiarFiltros() {
     setNombre("");
@@ -377,7 +387,7 @@ function Clientes() {
       }
 
       cerrarModalFormulario();
-      await cargarClientes();
+      await cargarClientes(null, paginaActual, tamanoPagina);
     } catch (error) {
       setErrorFormulario(error.message);
     } finally {
@@ -403,7 +413,7 @@ function Clientes() {
       setEliminando(true);
       await eliminarCliente(clienteEliminando.IdCliente);
       cerrarModalEliminar();
-      await cargarClientes();
+      await cargarClientes(null, paginaActual, tamanoPagina);
     } catch (error) {
       setError(error.message);
       cerrarModalEliminar();
@@ -477,7 +487,17 @@ function Clientes() {
         <div className="grupo-filtro grupo-boton">
           <button
             className="boton-secundario"
-            onClick={() => cargarClientes()}
+            onClick={() => {
+              setPaginaActual(1);
+              cargarClientes({
+                nombre: nombre,
+                idCategoria: categoria === "" ? null : Number(categoria),
+                idMetodoEntrega:
+                  metodoEntrega === "" ? null : Number(metodoEntrega),
+                page: 1,
+                pageSize: tamanoPagina,
+              }, 1, tamanoPagina);
+            }}
           >
             Buscar
           </button>
@@ -501,7 +521,7 @@ function Clientes() {
           </div>
 
           <span className="cantidad-clientes">
-            {clientes.length} clientes
+            {totalRegistros} clientes
           </span>
         </div>
 
@@ -525,7 +545,7 @@ function Clientes() {
 
               <tbody>
                 {clientes.length > 0 ? (
-                  clientesPaginados.map((cliente) => (
+                  clientes.map((cliente) => (
                     <tr key={cliente.IdCliente}>
                       <td>{cliente.NombreCliente}</td>
                       <td>{cliente.CategoriaCliente}</td>
@@ -575,8 +595,8 @@ function Clientes() {
             {totalPaginas > 1 && (
               <div className="paginacion-clientes">
                 <div className="paginacion-info-clientes">
-                  Mostrando {indiceInicial + 1} a{" "}
-                  {Math.min(indiceFinal, clientes.length)} de {clientes.length}
+                  Mostrando {(paginaActual - 1) * tamanoPagina + 1} a{" "}
+                  {Math.min(paginaActual * tamanoPagina, totalRegistros)} de {totalRegistros}
                 </div>
 
                 <div className="paginacion-controles-clientes">

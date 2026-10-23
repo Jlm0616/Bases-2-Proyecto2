@@ -1,30 +1,62 @@
 const { sql, conectarBD } = require('../config/db');
 
 /**
- * Lista productos con filtros opcionales
+ * Lista productos con filtros opcionales y paginación
  * @param {Object} req - Objeto de solicitud Express
  * @param {Object} req.body - Cuerpo de la solicitud
  * @param {string} [req.body.nombre] - Nombre del producto para filtrar
  * @param {number} [req.body.idGrupo] - ID de grupo para filtrar
+ * @param {number} [req.body.page] - Número de página (default: 1)
+ * @param {number} [req.body.pageSize] - Tamaño de página (default: 25)
  * @param {Object} res - Objeto de respuesta Express
- * @returns {Promise<void>} Devuelve array de productos
+ * @returns {Promise<void>} Devuelve estructura paginada de productos
  */
 async function listarProductos(req, res) {
   try {
     const {
       nombre = null,
-      idGrupo = null
+      idGrupo = null,
+      page = 1,
+      pageSize = 25
     } = req.body;
 
     const conexion = await conectarBD();
 
-    const resultado = await conexion
-      .request()
-      .input('Nombre', sql.NVarChar(100), nombre)
-      .input('GrupoID', sql.Int, idGrupo)
-      .execute('Inv_sp_ListarProductos');
+    // Validar y sanitizar parámetros de paginación
+    const pageNumber = Math.max(1, Number(page));
+    const pageSizeNumber = Math.min(1000, Math.max(1, Number(pageSize)));
 
-    res.json(resultado.recordset);
+    // Ejecutar consulta paginada y conteo en paralelo
+    const [resultadoPaginado, resultadoConteo] = await Promise.all([
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('GrupoID', sql.Int, idGrupo)
+        .input('PageNumber', sql.Int, pageNumber)
+        .input('PageSize', sql.Int, pageSizeNumber)
+        .execute('Inv_sp_ListarProductosPaginado'),
+      conexion
+        .request()
+        .input('Nombre', sql.NVarChar(100), nombre)
+        .input('GrupoID', sql.Int, idGrupo)
+        .execute('Inv_sp_ContarProductos')
+    ]);
+
+    const totalRecords = resultadoConteo.recordset[0]?.Total || 0;
+    const totalPages = Math.ceil(totalRecords / pageSizeNumber);
+
+    // Manejar páginas fuera de rango
+    const adjustedPage = pageNumber > totalPages && totalPages > 0 ? totalPages : pageNumber;
+
+    res.json({
+      data: resultadoPaginado.recordset,
+      pagination: {
+        page: adjustedPage,
+        pageSize: pageSizeNumber,
+        totalRecords: totalRecords,
+        totalPages: totalPages
+      }
+    });
 
   } catch (error) {
     console.error('Error al listar productos:', error);

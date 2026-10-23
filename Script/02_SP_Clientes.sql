@@ -7,47 +7,11 @@ GO
 --
 -- Descripción:
 --   Contiene los procedimientos almacenados para la gestión de clientes,
---   incluyendo listado con filtros y detalle completo de un cliente específico.
+--   incluyendo listado con filtros, paginación y detalle completo de un cliente específico.
 -- ============================================================================
 
--- ============================================================================
--- Stored Procedure: Cli_sp_ListarClientes
--- Descripción: Lista clientes con filtros acumulativos opcionales
--- Uso: Consulta de clientes con filtros de búsqueda flexibles
--- Parámetros:
---   @Nombre: Filtro por nombre del cliente (búsqueda parcial, LIKE)
---   @CategoriaID: Filtro por categoría de cliente (exacto)
---   @MetodoEntregaID: Filtro por método de entrega (exacto)
--- Ordenamiento: Nombre del cliente ascendente
--- Columnas retornadas:
---   - IdCliente: Identificador único del cliente
---   - NombreCliente: Nombre del cliente
---   - CategoriaCliente: Categoría a la que pertenece el cliente
---   - MetodoEntrega: Método de entrega preferido
--- ============================================================================
-CREATE OR ALTER PROCEDURE Cli_sp_ListarClientes
-    @Nombre               NVARCHAR(100) = NULL,
-    @CategoriaID          INT = NULL,
-    @MetodoEntregaID      INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT
-        C.CustomerID              AS IdCliente,
-        C.CustomerName            AS NombreCliente,
-        CC.CustomerCategoryName   AS CategoriaCliente,
-        DM.DeliveryMethodName     AS MetodoEntrega
-    FROM Cli_Clientes AS C
-    LEFT JOIN Cli_CategoriasCliente AS CC ON CC.CustomerCategoryID = C.CustomerCategoryID
-    LEFT JOIN Gen_MetodosEntrega    AS DM ON DM.DeliveryMethodID   = C.DeliveryMethodID
-    WHERE (@Nombre IS NULL OR C.CustomerName LIKE '%' + @Nombre + '%')
-      AND (@CategoriaID IS NULL OR C.CustomerCategoryID = @CategoriaID)
-      AND (@MetodoEntregaID IS NULL OR C.DeliveryMethodID = @MetodoEntregaID)
-    ORDER BY C.CustomerName ASC;
-END
+DROP PROCEDURE IF EXISTS Cli_sp_ListarClientes;
 GO
-
 
 -- ============================================================================
 -- Stored Procedure: Cli_sp_DetalleCliente
@@ -122,5 +86,85 @@ BEGIN
     LEFT JOIN Gen_Personas          AS pContacto ON pContacto.PersonID = C.PrimaryContactPersonID
     LEFT JOIN Gen_Personas          AS aContacto ON aContacto.PersonID = C.AlternateContactPersonID
     WHERE C.CustomerID = @CustomerID;
+END
+GO
+
+
+-- ============================================================================
+-- Stored Procedure: Cli_sp_ListarClientesPaginado
+-- Descripción: Lista clientes con filtros acumulativos y paginación
+-- Uso: Consulta de clientes con filtros de búsqueda flexibles y paginación
+-- Parámetros:
+--   @Nombre: Filtro por nombre del cliente (búsqueda parcial, LIKE)
+--   @CategoriaID: Filtro por categoría de cliente (exacto)
+--   @MetodoEntregaID: Filtro por método de entrega (exacto)
+--   @PageNumber: Número de página a mostrar (por defecto: 1)
+--   @PageSize: Cantidad de registros por página (por defecto: 25, máximo: 1000)
+-- Ordenamiento: Nombre del cliente ascendente, ID del cliente ascendente (tiebreaker)
+-- Columnas retornadas:
+--   - IdCliente: Identificador único del cliente
+--   - NombreCliente: Nombre del cliente
+--   - CategoriaCliente: Categoría a la que pertenece el cliente
+--   - MetodoEntrega: Método de entrega preferido
+-- ============================================================================
+CREATE OR ALTER PROCEDURE Cli_sp_ListarClientesPaginado
+    @Nombre               NVARCHAR(100) = NULL,
+    @CategoriaID          INT = NULL,
+    @MetodoEntregaID      INT = NULL,
+    @PageNumber           INT = 1,
+    @PageSize             INT = 25
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Sanitizar parámetros
+    IF @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize < 1 SET @PageSize = 25;
+    IF @PageSize > 1000 SET @PageSize = 1000;
+
+    SELECT
+        C.CustomerID              AS IdCliente,
+        C.CustomerName            AS NombreCliente,
+        CC.CustomerCategoryName   AS CategoriaCliente,
+        DM.DeliveryMethodName     AS MetodoEntrega
+    FROM Cli_Clientes AS C
+    LEFT JOIN Cli_CategoriasCliente AS CC ON CC.CustomerCategoryID = C.CustomerCategoryID
+    LEFT JOIN Gen_MetodosEntrega    AS DM ON DM.DeliveryMethodID   = C.DeliveryMethodID
+    WHERE (@Nombre IS NULL OR C.CustomerName LIKE '%' + @Nombre + '%')
+      AND (@CategoriaID IS NULL OR C.CustomerCategoryID = @CategoriaID)
+      AND (@MetodoEntregaID IS NULL OR C.DeliveryMethodID = @MetodoEntregaID)
+    ORDER BY C.CustomerName ASC, C.CustomerID ASC
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+
+-- ============================================================================
+-- Stored Procedure: Cli_sp_ContarClientes
+-- Descripción: Cuenta el total de clientes que cumplen con los filtros
+-- Uso: Calcula el total de registros para implementar paginación
+-- Parámetros:
+--   @Nombre: Filtro por nombre del cliente (búsqueda parcial, LIKE)
+--   @CategoriaID: Filtro por categoría de cliente (exacto)
+--   @MetodoEntregaID: Filtro por método de entrega (exacto)
+-- Columnas retornadas:
+--   - Total: Cantidad total de registros que cumplen los filtros
+-- ============================================================================
+CREATE OR ALTER PROCEDURE Cli_sp_ContarClientes
+    @Nombre               NVARCHAR(100) = NULL,
+    @CategoriaID          INT = NULL,
+    @MetodoEntregaID      INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT COUNT(*) AS Total
+    FROM Cli_Clientes AS C
+    LEFT JOIN Cli_CategoriasCliente AS CC ON CC.CustomerCategoryID = C.CustomerCategoryID
+    LEFT JOIN Gen_MetodosEntrega    AS DM ON DM.DeliveryMethodID   = C.DeliveryMethodID
+    WHERE (@Nombre IS NULL OR C.CustomerName LIKE '%' + @Nombre + '%')
+      AND (@CategoriaID IS NULL OR C.CustomerCategoryID = @CategoriaID)
+      AND (@MetodoEntregaID IS NULL OR C.DeliveryMethodID = @MetodoEntregaID);
 END
 GO

@@ -132,7 +132,7 @@ export async function obtenerProveedores() {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ nombre: "", idCategoria: null }),
+    body: JSON.stringify({ nombre: "", idCategoria: null, page: 1, pageSize: 1000 }),
   });
   const datos = await respuesta.json();
 
@@ -140,7 +140,8 @@ export async function obtenerProveedores() {
     throw new Error("Error al obtener proveedores");
   }
 
-  return datos;
+  // El endpoint ahora devuelve { data, pagination }
+  return datos.data || [];
 }
 
 /**

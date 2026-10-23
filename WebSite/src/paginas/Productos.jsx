@@ -67,6 +67,8 @@ function Productos() {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [tamanoPagina, setTamanoPagina] = useState(25);
+  const [totalRegistros, setTotalRegistros] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
 
   // Modal detalle
   const [modalDetalleAbierto, setModalDetalleAbierto] = useState(false);
@@ -86,7 +88,7 @@ function Productos() {
   const [productoEliminando, setProductoEliminando] = useState(null);
   const [eliminando, setEliminando] = useState(false);
 
-  async function cargarProductos(filtrosOverride) {
+  async function cargarProductos(filtrosOverride, pagina = paginaActual, tamano = tamanoPagina) {
     try {
       setCargando(true);
       setError("");
@@ -94,11 +96,17 @@ function Productos() {
       const filtros = filtrosOverride || {
         nombre: nombre,
         idGrupo: grupo === "" ? null : Number(grupo),
+        page: pagina,
+        pageSize: tamano,
       };
 
-      const datos = await buscarProductos(filtros);
-      setProductos(datos);
-      setPaginaActual(1);
+      const respuesta = await buscarProductos(filtros);
+
+      // El backend siempre devuelve { data, pagination }
+      setProductos(respuesta.data || []);
+      setTotalRegistros(respuesta.pagination?.totalRecords || 0);
+      setTotalPaginas(respuesta.pagination?.totalPages || 0);
+      setPaginaActual(respuesta.pagination?.page || 1);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -106,19 +114,16 @@ function Productos() {
     }
   }
 
-  const totalPaginas = Math.ceil(productos.length / tamanoPagina);
-  const indiceInicial = (paginaActual - 1) * tamanoPagina;
-  const indiceFinal = indiceInicial + tamanoPagina;
-  const productosPaginados = productos.slice(indiceInicial, indiceFinal);
-
   function irPagina(nuevaPagina) {
     if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
     setPaginaActual(nuevaPagina);
+    cargarProductos(null, nuevaPagina, tamanoPagina);
   }
 
   function cambiarTamanoPagina(nuevoTamano) {
     setTamanoPagina(nuevoTamano);
     setPaginaActual(1);
+    cargarProductos(null, 1, nuevoTamano);
   }
 
   function generarPaginas() {
@@ -151,7 +156,7 @@ function Productos() {
 
   // Carga inicial
   useEffect(() => {
-    cargarProductos({ nombre: "", idGrupo: null });
+    cargarProductos({ nombre: "", idGrupo: null, page: 1, pageSize: tamanoPagina }, 1, tamanoPagina);
     cargarCatalogos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -159,15 +164,18 @@ function Productos() {
   // Debounce
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaActual(1);
       cargarProductos({
         nombre: nombre,
         idGrupo: grupo === "" ? null : Number(grupo),
-      });
+        page: 1,
+        pageSize: tamanoPagina,
+      }, 1, tamanoPagina);
     }, 400);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nombre, grupo]);
+  }, [nombre, grupo, tamanoPagina]);
 
   async function limpiarFiltros() {
     setNombre("");
@@ -387,7 +395,7 @@ function Productos() {
       }
 
       cerrarModalFormulario();
-      await cargarProductos();
+      await cargarProductos(null, paginaActual, tamanoPagina);
     } catch (error) {
       setErrorFormulario(error.message);
     } finally {
@@ -413,7 +421,7 @@ function Productos() {
       setEliminando(true);
       await eliminarProducto(productoEliminando.IdProducto);
       cerrarModalEliminar();
-      await cargarProductos();
+      await cargarProductos(null, paginaActual, tamanoPagina);
     } catch (error) {
       setError(error.message);
       cerrarModalEliminar();
@@ -467,7 +475,15 @@ function Productos() {
         <div className="grupo-filtro-prod grupo-boton-prod">
           <button
             className="boton-secundario-prod"
-            onClick={() => cargarProductos()}
+            onClick={() => {
+              setPaginaActual(1);
+              cargarProductos({
+                nombre: nombre,
+                idGrupo: grupo === "" ? null : Number(grupo),
+                page: 1,
+                pageSize: tamanoPagina,
+              }, 1, tamanoPagina);
+            }}
           >
             Buscar
           </button>
@@ -491,7 +507,7 @@ function Productos() {
           </div>
 
           <span className="cantidad-prod">
-            {productos.length} productos
+            {totalRegistros} productos
           </span>
         </div>
 
@@ -515,7 +531,7 @@ function Productos() {
 
               <tbody>
                 {productos.length > 0 ? (
-                  productosPaginados.map((producto) => (
+                  productos.map((producto) => (
                     <tr key={producto.IdProducto}>
                       <td>{producto.NombreProducto}</td>
                       <td>{producto.GrupoProducto || "—"}</td>
@@ -565,8 +581,8 @@ function Productos() {
             {totalPaginas > 1 && (
               <div className="paginacion-productos">
                 <div className="paginacion-info-productos">
-                  Mostrando {indiceInicial + 1} a{" "}
-                  {Math.min(indiceFinal, productos.length)} de {productos.length}
+                  Mostrando {(paginaActual - 1) * tamanoPagina + 1} a{" "}
+                  {Math.min(paginaActual * tamanoPagina, totalRegistros)} de {totalRegistros}
                 </div>
 
                 <div className="paginacion-controles-productos">

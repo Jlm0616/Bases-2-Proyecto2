@@ -118,7 +118,7 @@ export async function obtenerClientes() {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ nombre: "", idCategoria: null, idMetodoEntrega: null }),
+    body: JSON.stringify({ nombre: "", idCategoria: null, idMetodoEntrega: null, page: 1, pageSize: 1000 }),
   });
 
   const datos = await respuesta.json();
@@ -127,7 +127,8 @@ export async function obtenerClientes() {
     throw new Error("Error al obtener clientes");
   }
 
-  return datos;
+  // El endpoint ahora devuelve { data, pagination }
+  return datos.data || [];
 }
 
 /**

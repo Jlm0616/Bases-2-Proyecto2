@@ -59,6 +59,8 @@ function Proveedores() {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [tamanoPagina, setTamanoPagina] = useState(25);
+  const [totalRegistros, setTotalRegistros] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
 
   // Modal detalle
   const [modalDetalleAbierto, setModalDetalleAbierto] = useState(false);
@@ -78,7 +80,7 @@ function Proveedores() {
   const [proveedorEliminando, setProveedorEliminando] = useState(null);
   const [eliminando, setEliminando] = useState(false);
 
-  async function cargarProveedores(filtrosOverride) {
+  async function cargarProveedores(filtrosOverride, pagina = paginaActual, tamano = tamanoPagina) {
     try {
       setCargando(true);
       setError("");
@@ -86,11 +88,17 @@ function Proveedores() {
       const filtros = filtrosOverride || {
         nombre: nombre,
         idCategoria: categoria === "" ? null : Number(categoria),
+        page: pagina,
+        pageSize: tamano,
       };
 
-      const datos = await buscarProveedores(filtros);
-      setProveedores(datos);
-      setPaginaActual(1);
+      const respuesta = await buscarProveedores(filtros);
+
+      // El backend siempre devuelve { data, pagination }
+      setProveedores(respuesta.data || []);
+      setTotalRegistros(respuesta.pagination?.totalRecords || 0);
+      setTotalPaginas(respuesta.pagination?.totalPages || 0);
+      setPaginaActual(respuesta.pagination?.page || 1);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -98,19 +106,16 @@ function Proveedores() {
     }
   }
 
-  const totalPaginas = Math.ceil(proveedores.length / tamanoPagina);
-  const indiceInicial = (paginaActual - 1) * tamanoPagina;
-  const indiceFinal = indiceInicial + tamanoPagina;
-  const proveedoresPaginados = proveedores.slice(indiceInicial, indiceFinal);
-
   function irPagina(nuevaPagina) {
     if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
     setPaginaActual(nuevaPagina);
+    cargarProveedores(null, nuevaPagina, tamanoPagina);
   }
 
   function cambiarTamanoPagina(nuevoTamano) {
     setTamanoPagina(nuevoTamano);
     setPaginaActual(1);
+    cargarProveedores(null, 1, nuevoTamano);
   }
 
   function generarPaginas() {
@@ -152,7 +157,7 @@ function Proveedores() {
 
   // Carga inicial
   useEffect(() => {
-    cargarProveedores({ nombre: "", idCategoria: null });
+    cargarProveedores({ nombre: "", idCategoria: null, page: 1, pageSize: tamanoPagina }, 1, tamanoPagina);
     cargarCatalogos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -160,15 +165,18 @@ function Proveedores() {
   // DEBOUNCE
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaActual(1);
       cargarProveedores({
         nombre: nombre,
         idCategoria: categoria === "" ? null : Number(categoria),
-      });
+        page: 1,
+        pageSize: tamanoPagina,
+      }, 1, tamanoPagina);
     }, 400);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nombre, categoria]);
+  }, [nombre, categoria, tamanoPagina]);
 
   async function limpiarFiltros() {
     setNombre("");
@@ -370,7 +378,7 @@ function Proveedores() {
       }
 
       cerrarModalFormulario();
-      await cargarProveedores();
+      await cargarProveedores(null, paginaActual, tamanoPagina);
     } catch (error) {
       setErrorFormulario(error.message);
     } finally {
@@ -395,7 +403,7 @@ function Proveedores() {
       setEliminando(true);
       await eliminarProveedor(proveedorEliminando.IdProveedor);
       cerrarModalEliminar();
-      await cargarProveedores();
+      await cargarProveedores(null, paginaActual, tamanoPagina);
     } catch (error) {
       setError(error.message);
       cerrarModalEliminar();
@@ -449,7 +457,15 @@ function Proveedores() {
         <div className="grupo-filtro-prov grupo-boton-prov">
           <button
             className="boton-secundario-prov"
-            onClick={() => cargarProveedores()}
+            onClick={() => {
+              setPaginaActual(1);
+              cargarProveedores({
+                nombre: nombre,
+                idCategoria: categoria === "" ? null : Number(categoria),
+                page: 1,
+                pageSize: tamanoPagina,
+              }, 1, tamanoPagina);
+            }}
           >
             Buscar
           </button>
@@ -473,7 +489,7 @@ function Proveedores() {
           </div>
 
           <span className="cantidad-prov">
-            {proveedores.length} proveedores
+            {totalRegistros} proveedores
           </span>
         </div>
 
@@ -497,7 +513,7 @@ function Proveedores() {
 
               <tbody>
                 {proveedores.length > 0 ? (
-                  proveedoresPaginados.map((proveedor) => (
+                  proveedores.map((proveedor) => (
                     <tr key={proveedor.IdProveedor}>
                       <td>{proveedor.NombreProveedor}</td>
                       <td>{proveedor.CategoriaProveedor}</td>
@@ -547,8 +563,8 @@ function Proveedores() {
             {totalPaginas > 1 && (
               <div className="paginacion-proveedores">
                 <div className="paginacion-info-proveedores">
-                  Mostrando {indiceInicial + 1} a{" "}
-                  {Math.min(indiceFinal, proveedores.length)} de {proveedores.length}
+                  Mostrando {(paginaActual - 1) * tamanoPagina + 1} a{" "}
+                  {Math.min(paginaActual * tamanoPagina, totalRegistros)} de {totalRegistros}
                 </div>
 
                 <div className="paginacion-controles-proveedores">
