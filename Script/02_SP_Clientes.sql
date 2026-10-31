@@ -10,9 +10,6 @@ GO
 --   incluyendo listado con filtros, paginación y detalle completo de un cliente específico.
 -- ============================================================================
 
-DROP PROCEDURE IF EXISTS Cli_sp_ListarClientes;
-GO
-
 -- ============================================================================
 -- Stored Procedure: Cli_sp_DetalleCliente
 -- Descripción: Obtiene el detalle completo de un cliente específico
