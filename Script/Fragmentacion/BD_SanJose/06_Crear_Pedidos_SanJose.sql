@@ -41,8 +41,6 @@ GO
 CREATE TABLE Sales.OrderLines (
     OrderLineID INT NOT NULL PRIMARY KEY,
     OrderID INT NOT NULL,
-    SucursalID INT NOT NULL
-        CONSTRAINT DF_OrderLines_SucursalID DEFAULT (1), -- NUEVA COLUMNA
     StockItemID INT NOT NULL,
     Description NVARCHAR(100) NOT NULL,
     PackageTypeID INT NOT NULL,
@@ -53,9 +51,6 @@ CREATE TABLE Sales.OrderLines (
     PickingCompletedWhen DATETIME2(7) NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
-
-    CONSTRAINT CK_OrderLines_SucursalID
-        CHECK (SucursalID IN (0, 1)), -- NUEVA RESTRICCIÓN
 
     CONSTRAINT FK_OrderLines_Orders
         FOREIGN KEY (OrderID)

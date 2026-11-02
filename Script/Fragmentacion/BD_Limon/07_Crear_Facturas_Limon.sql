@@ -64,8 +64,6 @@ GO
 CREATE TABLE Sales.InvoiceLines (
     InvoiceLineID INT NOT NULL PRIMARY KEY,
     InvoiceID INT NOT NULL,
-    SucursalID INT NOT NULL
-        CONSTRAINT DF_InvoiceLines_SucursalID_Limon DEFAULT (2), -- NUEVA COLUMNA
     StockItemID INT NOT NULL,
     Description NVARCHAR(100) NOT NULL,
     PackageTypeID INT NOT NULL,
@@ -77,9 +75,6 @@ CREATE TABLE Sales.InvoiceLines (
     ExtendedPrice DECIMAL(18,2) NOT NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
-
-    CONSTRAINT CK_InvoiceLines_SucursalID_Limon
-        CHECK (SucursalID IN (0, 2)), -- NUEVA RESTRICCIÓN
 
     CONSTRAINT FK_InvoiceLines_Invoices
         FOREIGN KEY (InvoiceID)
