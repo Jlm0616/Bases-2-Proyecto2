@@ -206,38 +206,3 @@ BEGIN CATCH
     THROW;
 END CATCH;
 GO
-
--- ============================================
--- 12. VERIFICAR RESULTADOS
--- ============================================
-
-SELECT 'Countries' AS Tabla, COUNT(*) AS Registros
-FROM Application.Countries
-UNION ALL
-SELECT 'StateProvinces', COUNT(*)
-FROM Application.StateProvinces
-UNION ALL
-SELECT 'Cities', COUNT(*)
-FROM Application.Cities
-UNION ALL
-SELECT 'DeliveryMethods', COUNT(*)
-FROM Application.DeliveryMethods
-UNION ALL
-SELECT 'SupplierCategories', COUNT(*)
-FROM Purchasing.SupplierCategories
-UNION ALL
-SELECT 'BuyingGroups', COUNT(*)
-FROM Sales.BuyingGroups
-UNION ALL
-SELECT 'CustomerCategories', COUNT(*)
-FROM Sales.CustomerCategories
-UNION ALL
-SELECT 'Colors', COUNT(*)
-FROM Warehouse.Colors
-UNION ALL
-SELECT 'PackageTypes', COUNT(*)
-FROM Warehouse.PackageTypes
-UNION ALL
-SELECT 'StockGroups', COUNT(*)
-FROM Warehouse.StockGroups;
-GO

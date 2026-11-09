@@ -13,20 +13,7 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
     -- ============================================
-    -- 1. VERIFICAR TABLAS VACIAS
-    -- ============================================
-
-    IF EXISTS (SELECT 1 FROM Application.PeoplePrivate)
-       OR EXISTS (SELECT 1 FROM Sales.CustomersPrivate)
-       OR EXISTS (SELECT 1 FROM Purchasing.SuppliersPrivate)
-    BEGIN
-        THROW 50001,
-            'Las tablas de destino deben estar vacias.',
-            1;
-    END;
-
-    -- ============================================
-    -- 2. MIGRAR PERSONAS
+    -- 1. MIGRAR PERSONAS
     -- ============================================
 
     INSERT INTO Application.PeoplePrivate (
@@ -59,7 +46,7 @@ BEGIN TRY
     FROM WideWorldImporters.Application.People;
 
     -- ============================================
-    -- 3. MIGRAR CLIENTES
+    -- 2. MIGRAR CLIENTES
     -- ============================================
 
     INSERT INTO Sales.CustomersPrivate (
@@ -106,7 +93,7 @@ BEGIN TRY
     FROM WideWorldImporters.Sales.Customers;
 
     -- ============================================
-    -- 4. MIGRAR PROVEEDORES
+    -- 3. MIGRAR PROVEEDORES
     -- ============================================
 
     INSERT INTO Purchasing.SuppliersPrivate (
@@ -159,7 +146,7 @@ BEGIN TRY
     FROM WideWorldImporters.Purchasing.Suppliers;
 
     -- ============================================
-    -- 5. VALIDAR CANTIDADES
+    -- 4. VALIDAR CANTIDADES
     -- ============================================
 
     IF
@@ -188,28 +175,4 @@ BEGIN CATCH
 
     THROW;
 END CATCH;
-GO
-
--- ============================================
--- 6. VERIFICAR RESULTADOS
--- ============================================
-
-SELECT
-    'PeoplePrivate' AS Tabla,
-    COUNT(*) AS Registros
-FROM Application.PeoplePrivate
-
-UNION ALL
-
-SELECT
-    'CustomersPrivate',
-    COUNT(*)
-FROM Sales.CustomersPrivate
-
-UNION ALL
-
-SELECT
-    'SuppliersPrivate',
-    COUNT(*)
-FROM Purchasing.SuppliersPrivate;
 GO

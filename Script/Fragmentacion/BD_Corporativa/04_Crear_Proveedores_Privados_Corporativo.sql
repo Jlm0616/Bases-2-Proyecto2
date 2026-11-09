@@ -45,19 +45,3 @@ CREATE TABLE Purchasing.SuppliersPrivate (
     PostalPostalCode NVARCHAR(10) NOT NULL
 );
 GO
-
--- ============================================
--- Verificar estructura
--- ============================================
-
-SELECT
-    c.name AS Columna,
-    TYPE_NAME(c.user_type_id) AS Tipo,
-    c.max_length AS LongitudBytes,
-    c.precision AS PrecisionDato,
-    c.scale AS Escala,
-    c.is_nullable AS PermiteNull
-FROM sys.columns c
-WHERE c.object_id = OBJECT_ID('Purchasing.SuppliersPrivate')
-ORDER BY c.column_id;
-GO

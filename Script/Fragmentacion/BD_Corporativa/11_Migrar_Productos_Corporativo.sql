@@ -13,18 +13,7 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
     -- ============================================
-    -- 1. VERIFICAR TABLA VACIA
-    -- ============================================
-
-    IF EXISTS (SELECT 1 FROM Warehouse.StockItems)
-    BEGIN
-        THROW 50001,
-            'La tabla de productos debe estar vacia.',
-            1;
-    END;
-
-    -- ============================================
-    -- 2. MIGRAR PRODUCTOS
+    -- 1. MIGRAR PRODUCTOS
     -- ============================================
 
     INSERT INTO Warehouse.StockItems (
@@ -79,7 +68,7 @@ BEGIN TRY
     FROM WideWorldImporters.Warehouse.StockItems;
 
     -- ============================================
-    -- 3. VALIDAR CANTIDAD
+    -- 2. VALIDAR CANTIDAD
     -- ============================================
 
     IF (
@@ -106,16 +95,4 @@ BEGIN CATCH
 
     THROW;
 END CATCH;
-GO
-
--- ============================================
--- 4. VERIFICAR RESULTADOS
--- ============================================
-
-SELECT
-    'Warehouse.StockItems' AS Tabla,
-    (SELECT COUNT(*)
-     FROM WideWorldImporters.Warehouse.StockItems) AS Origen,
-    (SELECT COUNT(*)
-     FROM Warehouse.StockItems) AS Destino;
 GO

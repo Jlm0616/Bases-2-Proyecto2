@@ -33,15 +33,3 @@ IF NOT EXISTS (
 )
     EXEC('CREATE SCHEMA Warehouse');
 GO
-
--- Verificar los esquemas creados
-SELECT name AS Esquema
-FROM sys.schemas
-WHERE name IN (
-    'Application',
-    'Sales',
-    'Purchasing',
-    'Warehouse'
-)
-ORDER BY name;
-GO

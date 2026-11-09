@@ -92,9 +92,3 @@ GO
 --EXEC Application.Usr_sp_CrearUsuario 'admin_lim', 'Admin123!', 'Administrador Limon',    'Administrador', 'admin.lim@wwi.com', '2025-01-15', 'Limon';
 --EXEC Application.Usr_sp_CrearUsuario 'corp',      'Corp123!',  'Gerente Corporativo',    'Corporativo',   'corp@wwi.com',      '2024-06-01', 'Corporativo';
 --GO
-
--- 6. VERIFICACION
---SELECT UserID, Username, PasswordEncrypted, Role, Sucursal FROM Application.Users;
---EXEC Application.Usr_sp_Login 'admin_sj', 'Admin123!';   -- debe devolver 1 fila
---EXEC Application.Usr_sp_Login 'admin_sj', 'incorrecta';  -- debe devolver 0 filas
---GO

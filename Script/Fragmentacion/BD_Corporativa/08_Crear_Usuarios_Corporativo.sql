@@ -30,17 +30,3 @@ CREATE TABLE Application.Users (
         CHECK (Role IN ('Administrador', 'Corporativo'))
 );
 GO
-
--- ============================================
--- 2. VERIFICAR ESTRUCTURA
--- ============================================
-
-SELECT
-    c.name AS Columna,
-    TYPE_NAME(c.user_type_id) AS Tipo,
-    c.max_length AS LongitudBytes,
-    c.is_nullable AS PermiteNull
-FROM sys.columns c
-WHERE c.object_id = OBJECT_ID('Application.Users')
-ORDER BY c.column_id;
-GO

@@ -13,21 +13,7 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
     -- ============================================
-    -- 1. VERIFICAR TABLA VACIA
-    -- ============================================
-
-    IF EXISTS (
-        SELECT 1
-        FROM Warehouse.StockItemStockGroups
-    )
-    BEGIN
-        THROW 50001,
-            'La tabla de destino debe estar vacia.',
-            1;
-    END;
-
-    -- ============================================
-    -- 2. MIGRAR RELACIONES PRODUCTO-GRUPO
+    -- 1. MIGRAR RELACIONES PRODUCTO-GRUPO
     -- ============================================
 
     INSERT INTO Warehouse.StockItemStockGroups (
@@ -46,7 +32,7 @@ BEGIN TRY
     FROM WideWorldImporters.Warehouse.StockItemStockGroups;
 
     -- ============================================
-    -- 3. VALIDAR CANTIDAD
+    -- 2. VALIDAR CANTIDAD
     -- ============================================
 
     IF (
@@ -73,16 +59,4 @@ BEGIN CATCH
 
     THROW;
 END CATCH;
-GO
-
--- ============================================
--- 4. VERIFICAR RESULTADOS
--- ============================================
-
-SELECT
-    'Warehouse.StockItemStockGroups' AS Tabla,
-    (SELECT COUNT(*)
-     FROM WideWorldImporters.Warehouse.StockItemStockGroups) AS Origen,
-    (SELECT COUNT(*)
-     FROM Warehouse.StockItemStockGroups) AS Destino;
 GO

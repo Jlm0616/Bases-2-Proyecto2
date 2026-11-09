@@ -62,32 +62,3 @@ CREATE TABLE Warehouse.StockItems (
         REFERENCES Warehouse.PackageTypes(PackageTypeID)
 );
 GO
-
--- ============================================
--- 2. VERIFICAR ESTRUCTURA
--- ============================================
-
-SELECT
-    c.name AS Columna,
-    TYPE_NAME(c.user_type_id) AS Tipo,
-    c.max_length AS LongitudBytes,
-    c.is_nullable AS PermiteNull
-FROM sys.columns c
-WHERE c.object_id = OBJECT_ID('Warehouse.StockItems')
-ORDER BY c.column_id;
-GO
-
--- ============================================
--- 3. VERIFICAR CLAVES FORANEAS
--- ============================================
-
-SELECT
-    fk.name AS ClaveForanea,
-    OBJECT_SCHEMA_NAME(fk.referenced_object_id)
-        AS EsquemaReferenciado,
-    OBJECT_NAME(fk.referenced_object_id)
-        AS TablaReferenciada
-FROM sys.foreign_keys fk
-WHERE fk.parent_object_id =
-    OBJECT_ID('Warehouse.StockItems');
-GO
