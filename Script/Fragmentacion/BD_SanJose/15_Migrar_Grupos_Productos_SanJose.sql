@@ -47,8 +47,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Migracion completada correctamente.';
-
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

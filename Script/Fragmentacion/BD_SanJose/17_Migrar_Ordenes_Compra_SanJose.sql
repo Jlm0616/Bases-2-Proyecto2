@@ -77,8 +77,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Migracion de ordenes de compra completada.';
-
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

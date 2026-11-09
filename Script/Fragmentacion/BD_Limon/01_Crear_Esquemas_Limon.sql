@@ -12,7 +12,6 @@ GO
 IF SCHEMA_ID(N'Sales') IS NULL
 BEGIN
     EXEC(N'CREATE SCHEMA Sales');
-    PRINT 'Esquema Sales creado.';
 END;
 GO
 
@@ -20,7 +19,6 @@ GO
 IF SCHEMA_ID(N'Purchasing') IS NULL
 BEGIN
     EXEC(N'CREATE SCHEMA Purchasing');
-    PRINT 'Esquema Purchasing creado.';
 END;
 GO
 
@@ -28,7 +26,6 @@ GO
 IF SCHEMA_ID(N'Warehouse') IS NULL
 BEGIN
     EXEC(N'CREATE SCHEMA Warehouse');
-    PRINT 'Esquema Warehouse creado.';
 END;
 GO
 
@@ -36,6 +33,5 @@ GO
 IF SCHEMA_ID(N'Application') IS NULL
 BEGIN
     EXEC(N'CREATE SCHEMA Application');
-    PRINT 'Esquema Application creado.';
 END;
 GO

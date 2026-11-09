@@ -66,7 +66,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Productos migrados correctamente.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

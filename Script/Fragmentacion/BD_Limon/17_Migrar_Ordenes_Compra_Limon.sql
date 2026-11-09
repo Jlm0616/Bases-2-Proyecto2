@@ -78,8 +78,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Migracion de ordenes de compra completada.';
-
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
@@ -87,48 +85,4 @@ BEGIN CATCH
 
     THROW;
 END CATCH;
-GO
-
--- ============================================================
--- VERIFICAR CANTIDADES
--- ============================================================
-
-SELECT
-    'PurchaseOrders' AS Tabla,
-    (SELECT COUNT(*)
-     FROM WideWorldImporters.Purchasing.PurchaseOrders) AS Origen,
-    (SELECT COUNT(*)
-     FROM Purchasing.PurchaseOrders) AS Destino
-
-UNION ALL
-
-SELECT
-    'PurchaseOrderLines',
-    (SELECT COUNT(*)
-     FROM WideWorldImporters.Purchasing.PurchaseOrderLines),
-    (SELECT COUNT(*)
-     FROM Purchasing.PurchaseOrderLines);
-GO
-
--- ============================================================
--- VERIFICAR SUCURSAL HISTORICA
--- ============================================================
-
-SELECT
-    SucursalID,
-    COUNT(*) AS Total
-FROM Purchasing.PurchaseOrders
-GROUP BY SucursalID;
-GO
-
--- ============================================================
--- VERIFICAR LINEAS HUERFANAS
--- ============================================================
-
-SELECT
-    COUNT(*) AS LineasHuerfanas
-FROM Purchasing.PurchaseOrderLines pol
-LEFT JOIN Purchasing.PurchaseOrders po
-    ON pol.PurchaseOrderID = po.PurchaseOrderID
-WHERE po.PurchaseOrderID IS NULL;
 GO

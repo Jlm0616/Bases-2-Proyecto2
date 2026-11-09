@@ -39,7 +39,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Inventario de Limon migrado correctamente.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

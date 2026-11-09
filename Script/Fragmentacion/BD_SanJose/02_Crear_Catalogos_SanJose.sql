@@ -191,5 +191,3 @@ CREATE INDEX IX_StateProvinces_CountryID
     ON Application.StateProvinces(CountryID);
 GO
 
-PRINT 'Tablas globales de Application creadas correctamente en WWI_SanJose.';
-GO

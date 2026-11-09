@@ -153,7 +153,6 @@ FROM WideWorldImporters.Application.People;
 
     COMMIT TRANSACTION;
 
-    PRINT 'Catálogos auxiliares y globales migrados correctamente a WWI_SanJose.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

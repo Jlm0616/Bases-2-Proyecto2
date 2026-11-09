@@ -76,7 +76,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Clientes y proveedores migrados correctamente.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

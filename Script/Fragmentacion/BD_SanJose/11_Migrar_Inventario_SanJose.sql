@@ -38,7 +38,6 @@ BEGIN TRY
 
     COMMIT TRANSACTION;
 
-    PRINT 'Inventario de San Jose migrado correctamente.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

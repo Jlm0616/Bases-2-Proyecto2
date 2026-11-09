@@ -153,7 +153,6 @@ BEGIN TRY
 
         COMMIT TRANSACTION;
 
-        PRINT 'Catálogos auxiliares y globales migrados correctamente a WWI_Limon.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0
