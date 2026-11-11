@@ -1,8 +1,5 @@
-
 -- ============================================
 -- 00_Crear_BD_Corporativo.sql
--- Proyecto 2 - Bases de Datos II
--- Crear base de datos corporativa
 -- ============================================
 
 USE master;

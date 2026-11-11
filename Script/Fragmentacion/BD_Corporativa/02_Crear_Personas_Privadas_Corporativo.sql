@@ -1,3 +1,6 @@
+-- ============================================
+-- 02_Crear_Personas_Privadas_Corporativo.sql
+-- ============================================
 
 USE WWI_Corporativo;
 GO

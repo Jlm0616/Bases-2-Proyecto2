@@ -1,8 +1,5 @@
-
 -- ============================================
 -- 00_Crear_BD_SanJose.sql
--- Proyecto 2 - Bases de Datos II
--- Crear base de datos de San Jose
 -- ============================================
 
 USE master;

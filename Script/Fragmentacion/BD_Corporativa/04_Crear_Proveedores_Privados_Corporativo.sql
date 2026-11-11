@@ -1,3 +1,6 @@
+-- ============================================
+-- 04_Crear_Proveedores_Privados_Corporativo.sql
+-- ============================================
 
 USE WWI_Corporativo;
 GO

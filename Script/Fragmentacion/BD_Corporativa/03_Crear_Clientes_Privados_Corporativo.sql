@@ -1,3 +1,6 @@
+-- ============================================
+-- 03_Crear_Clientes_Privados_Corporativo.sql
+-- ============================================
 
 USE WWI_Corporativo;
 GO

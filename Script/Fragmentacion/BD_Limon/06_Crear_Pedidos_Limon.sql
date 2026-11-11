@@ -51,6 +51,11 @@ CREATE TABLE Sales.OrderLines (
     PickingCompletedWhen DATETIME2(7) NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
+    SucursalID INT NOT NULL
+        CONSTRAINT DF_OrderLines_SucursalID DEFAULT (2),
+
+    CONSTRAINT CK_OrderLines_SucursalID
+        CHECK (SucursalID IN (0, 2)),
 
     CONSTRAINT FK_OrderLines_Orders
         FOREIGN KEY (OrderID)

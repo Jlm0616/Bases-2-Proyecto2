@@ -1,13 +1,9 @@
+-- ============================================
+-- 16_Crear_Ordenes_Compra_SanJose.sql
+-- ============================================
+
 USE WWI_SanJose;
 GO
-
--- ============================================================
--- 16 - CREAR TABLAS DE ORDENES DE COMPRA
--- ============================================================
-
--- ============================================================
--- 1. PURCHASE ORDERS
--- ============================================================
 
 CREATE TABLE Purchasing.PurchaseOrders (
     PurchaseOrderID INT NOT NULL,
@@ -22,38 +18,27 @@ CREATE TABLE Purchasing.PurchaseOrders (
     InternalComments NVARCHAR(MAX) NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
-
-    -- 0 = Historico, 1 = San Jose, 2 = Limon
     SucursalID INT NOT NULL
         CONSTRAINT DF_PurchaseOrders_SucursalID DEFAULT (1),
 
     CONSTRAINT PK_Purchasing_PurchaseOrders
         PRIMARY KEY (PurchaseOrderID),
-
     CONSTRAINT CK_PurchaseOrders_SucursalID
         CHECK (SucursalID IN (0, 1)),
-
     CONSTRAINT FK_PurchaseOrders_Suppliers
         FOREIGN KEY (SupplierID)
         REFERENCES Purchasing.Suppliers(SupplierID),
-
     CONSTRAINT FK_PurchaseOrders_DeliveryMethods
         FOREIGN KEY (DeliveryMethodID)
         REFERENCES Application.DeliveryMethods(DeliveryMethodID),
-
     CONSTRAINT FK_PurchaseOrders_ContactPerson
         FOREIGN KEY (ContactPersonID)
         REFERENCES Application.People(PersonID),
-
     CONSTRAINT FK_PurchaseOrders_LastEditedBy
         FOREIGN KEY (LastEditedBy)
         REFERENCES Application.People(PersonID)
 );
 GO
-
--- ============================================================
--- 2. PURCHASE ORDER LINES
--- ============================================================
 
 CREATE TABLE Purchasing.PurchaseOrderLines (
     PurchaseOrderLineID INT NOT NULL,
@@ -68,22 +53,22 @@ CREATE TABLE Purchasing.PurchaseOrderLines (
     IsOrderLineFinalized BIT NOT NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
+    SucursalID INT NOT NULL
+        CONSTRAINT DF_PurchaseOrderLines_SucursalID DEFAULT (1),
 
     CONSTRAINT PK_Purchasing_PurchaseOrderLines
         PRIMARY KEY (PurchaseOrderLineID),
-
+    CONSTRAINT CK_PurchaseOrderLines_SucursalID
+        CHECK (SucursalID IN (0, 1)),
     CONSTRAINT FK_PurchaseOrderLines_PurchaseOrders
         FOREIGN KEY (PurchaseOrderID)
         REFERENCES Purchasing.PurchaseOrders(PurchaseOrderID),
-
     CONSTRAINT FK_PurchaseOrderLines_StockItems
         FOREIGN KEY (StockItemID)
         REFERENCES Warehouse.StockItems(StockItemID),
-
     CONSTRAINT FK_PurchaseOrderLines_PackageTypes
         FOREIGN KEY (PackageTypeID)
         REFERENCES Warehouse.PackageTypes(PackageTypeID),
-
     CONSTRAINT FK_PurchaseOrderLines_LastEditedBy
         FOREIGN KEY (LastEditedBy)
         REFERENCES Application.People(PersonID)

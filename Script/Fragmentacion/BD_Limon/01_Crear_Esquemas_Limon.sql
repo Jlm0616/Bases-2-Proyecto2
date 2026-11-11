@@ -1,8 +1,5 @@
-
 -- ============================================
 -- 01_Crear_Esquemas_Limon.sql
--- Proyecto 2 - Bases de Datos II
--- Crear esquemas de la sucursal Limon
 -- ============================================
 
 USE WWI_Limon;

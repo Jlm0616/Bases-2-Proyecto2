@@ -27,11 +27,9 @@ CREATE TABLE Sales.Orders (
 
     CONSTRAINT CK_Orders_SucursalID
         CHECK (SucursalID IN (0, 1)),
-
     CONSTRAINT FK_Orders_Customers
         FOREIGN KEY (CustomerID)
         REFERENCES Sales.Customers(CustomerID),
-
     CONSTRAINT FK_Orders_Backorder
         FOREIGN KEY (BackorderOrderID)
         REFERENCES Sales.Orders(OrderID)
@@ -51,15 +49,17 @@ CREATE TABLE Sales.OrderLines (
     PickingCompletedWhen DATETIME2(7) NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
+    SucursalID INT NOT NULL
+        CONSTRAINT DF_OrderLines_SucursalID DEFAULT (1),
 
+    CONSTRAINT CK_OrderLines_SucursalID
+        CHECK (SucursalID IN (0, 1)),
     CONSTRAINT FK_OrderLines_Orders
         FOREIGN KEY (OrderID)
         REFERENCES Sales.Orders(OrderID),
-
     CONSTRAINT FK_OrderLines_StockItems
         FOREIGN KEY (StockItemID)
         REFERENCES Warehouse.StockItems(StockItemID),
-
     CONSTRAINT FK_OrderLines_PackageTypes
         FOREIGN KEY (PackageTypeID)
         REFERENCES Warehouse.PackageTypes(PackageTypeID)

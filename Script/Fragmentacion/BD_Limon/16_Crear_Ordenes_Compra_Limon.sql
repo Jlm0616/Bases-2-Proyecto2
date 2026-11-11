@@ -1,10 +1,9 @@
+-- ============================================
+-- 16_Crear_Ordenes_Compra_Limon.sql
+-- ============================================
 
 USE WWI_Limon;
 GO
-
--- ============================================================
--- CREAR ORDENES DE COMPRA
--- ============================================================
 
 CREATE TABLE Purchasing.PurchaseOrders (
     PurchaseOrderID INT NOT NULL,
@@ -19,8 +18,6 @@ CREATE TABLE Purchasing.PurchaseOrders (
     InternalComments NVARCHAR(MAX) NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
-
-    -- 0 = Historico, 2 = Limon
     SucursalID INT NOT NULL
         CONSTRAINT DF_PurchaseOrders_SucursalID DEFAULT (2),
 
@@ -48,10 +45,6 @@ CREATE TABLE Purchasing.PurchaseOrders (
 );
 GO
 
--- ============================================================
--- CREAR LINEAS DE ORDENES DE COMPRA
--- ============================================================
-
 CREATE TABLE Purchasing.PurchaseOrderLines (
     PurchaseOrderLineID INT NOT NULL,
     PurchaseOrderID INT NOT NULL,
@@ -65,6 +58,11 @@ CREATE TABLE Purchasing.PurchaseOrderLines (
     IsOrderLineFinalized BIT NOT NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
+    SucursalID INT NOT NULL
+        CONSTRAINT DF_PurchaseOrderLines_SucursalID DEFAULT (2),
+
+    CONSTRAINT CK_PurchaseOrderLines_SucursalID
+        CHECK (SucursalID IN (0, 2)),
 
     CONSTRAINT PK_Purchasing_PurchaseOrderLines
         PRIMARY KEY (PurchaseOrderLineID),
@@ -86,3 +84,4 @@ CREATE TABLE Purchasing.PurchaseOrderLines (
         REFERENCES Application.People(PersonID)
 );
 GO
+

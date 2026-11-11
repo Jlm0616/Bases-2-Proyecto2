@@ -46,15 +46,12 @@ CREATE TABLE Sales.Invoices (
 
     CONSTRAINT CK_Invoices_SucursalID
         CHECK (SucursalID IN (0, 1)),
-
     CONSTRAINT FK_Invoices_Customers
         FOREIGN KEY (CustomerID)
         REFERENCES Sales.Customers(CustomerID),
-
     CONSTRAINT FK_Invoices_BillToCustomer
         FOREIGN KEY (BillToCustomerID)
         REFERENCES Sales.Customers(CustomerID),
-
     CONSTRAINT FK_Invoices_Orders
         FOREIGN KEY (OrderID)
         REFERENCES Sales.Orders(OrderID)
@@ -75,15 +72,17 @@ CREATE TABLE Sales.InvoiceLines (
     ExtendedPrice DECIMAL(18,2) NOT NULL,
     LastEditedBy INT NOT NULL,
     LastEditedWhen DATETIME2(7) NOT NULL,
+    SucursalID INT NOT NULL
+        CONSTRAINT DF_InvoiceLines_SucursalID DEFAULT (1),
 
+    CONSTRAINT CK_InvoiceLines_SucursalID
+        CHECK (SucursalID IN (0, 1)),
     CONSTRAINT FK_InvoiceLines_Invoices
         FOREIGN KEY (InvoiceID)
         REFERENCES Sales.Invoices(InvoiceID),
-
     CONSTRAINT FK_InvoiceLines_StockItems
         FOREIGN KEY (StockItemID)
         REFERENCES Warehouse.StockItems(StockItemID),
-
     CONSTRAINT FK_InvoiceLines_PackageTypes
         FOREIGN KEY (PackageTypeID)
         REFERENCES Warehouse.PackageTypes(PackageTypeID)
