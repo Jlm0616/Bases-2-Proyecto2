@@ -1,52 +1,91 @@
+
 USE WWI_Corporativo;
 GO
 
 -- ============================================================================
 -- 00_Sinonimos_Corporativo.sql
--- Sinónimos del nodo Corporativo (datos privados + catálogos replicados)
+-- Sinónimos del nodo Corporativo (datos privados + catálogos replicados
+-- + vistas unificadas de ventas y compras)
 -- ============================================================================
 
--- Clientes
-DROP SYNONYM IF EXISTS Cli_ClientesPrivados;
-DROP SYNONYM IF EXISTS Cli_CategoriasCliente;
-DROP SYNONYM IF EXISTS Cli_GruposCompra;
-CREATE SYNONYM Cli_ClientesPrivados   FOR Sales.CustomersPrivate;
-CREATE SYNONYM Cli_CategoriasCliente  FOR Sales.CustomerCategories;
-CREATE SYNONYM Cli_GruposCompra       FOR Sales.BuyingGroups;
+-- ============================================
+-- CLIENTES - DATOS PRIVADOS
+-- ============================================
+CREATE SYNONYM dbo.Cli_ClientesPrivados
+    FOR Sales.CustomersPrivate;
 
--- Proveedores
-DROP SYNONYM IF EXISTS Prov_ProveedoresPrivados;
-DROP SYNONYM IF EXISTS Prov_CategoriasProveedor;
-CREATE SYNONYM Prov_ProveedoresPrivados FOR Purchasing.SuppliersPrivate;
-CREATE SYNONYM Prov_CategoriasProveedor FOR Purchasing.SupplierCategories;
+CREATE SYNONYM dbo.Cli_CategoriasCliente
+    FOR Sales.CustomerCategories;
 
--- Inventario / Productos
-DROP SYNONYM IF EXISTS Inv_Articulos;
-DROP SYNONYM IF EXISTS Inv_GruposArticulo;
-DROP SYNONYM IF EXISTS Inv_ArticuloGrupo;
-DROP SYNONYM IF EXISTS Inv_Colores;
-DROP SYNONYM IF EXISTS Inv_TiposEmpaque;
-CREATE SYNONYM Inv_Articulos      FOR Warehouse.StockItems;
-CREATE SYNONYM Inv_GruposArticulo FOR Warehouse.StockGroups;
-CREATE SYNONYM Inv_ArticuloGrupo  FOR Warehouse.StockItemStockGroups;
-CREATE SYNONYM Inv_Colores        FOR Warehouse.Colors;
-CREATE SYNONYM Inv_TiposEmpaque   FOR Warehouse.PackageTypes;
+CREATE SYNONYM dbo.Cli_GruposCompra
+    FOR Sales.BuyingGroups;
 
--- Comunes
-DROP SYNONYM IF EXISTS Gen_PersonasPrivadas;
-DROP SYNONYM IF EXISTS Gen_MetodosEntrega;
-DROP SYNONYM IF EXISTS Gen_Ciudades;
-DROP SYNONYM IF EXISTS Gen_Provincias;
-DROP SYNONYM IF EXISTS Gen_Paises;
-CREATE SYNONYM Gen_PersonasPrivadas FOR Application.PeoplePrivate;
-CREATE SYNONYM Gen_MetodosEntrega   FOR Application.DeliveryMethods;
-CREATE SYNONYM Gen_Ciudades         FOR Application.Cities;
-CREATE SYNONYM Gen_Provincias       FOR Application.StateProvinces;
-CREATE SYNONYM Gen_Paises           FOR Application.Countries;
-GO
+-- ============================================
+-- PROVEEDORES
+-- ============================================
+CREATE SYNONYM dbo.Prov_ProveedoresPrivados
+    FOR Purchasing.SuppliersPrivate;
 
--- Verificación
-SELECT name AS Sinonimo, base_object_name AS Apunta_A
-FROM sys.synonyms
-ORDER BY name;
+CREATE SYNONYM dbo.Prov_CategoriasProveedor
+    FOR Purchasing.SupplierCategories;
+
+-- ============================================
+-- INVENTARIO / PRODUCTOS
+-- ============================================
+CREATE SYNONYM dbo.Inv_Articulos
+    FOR Warehouse.StockItems;
+
+CREATE SYNONYM dbo.Inv_GruposArticulo
+    FOR Warehouse.StockGroups;
+
+CREATE SYNONYM dbo.Inv_ArticuloGrupo
+    FOR Warehouse.StockItemStockGroups;
+
+CREATE SYNONYM dbo.Inv_Colores
+    FOR Warehouse.Colors;
+
+CREATE SYNONYM dbo.Inv_TiposEmpaque
+    FOR Warehouse.PackageTypes;
+
+-- ============================================
+-- VENTAS - VISTAS UNIFICADAS
+-- ============================================
+CREATE SYNONYM dbo.Vta_OrdenesUnificadas
+    FOR Sales.vw_OrdersUnificados;
+
+CREATE SYNONYM dbo.Vta_LineasOrdenUnificadas
+    FOR Sales.vw_OrderLinesUnificados;
+
+CREATE SYNONYM dbo.Vta_FacturasUnificadas
+    FOR Sales.vw_InvoicesUnificados;
+
+CREATE SYNONYM dbo.Vta_LineasFacturaUnificadas
+    FOR Sales.vw_InvoiceLinesUnificados;
+
+-- ============================================
+-- COMPRAS - VISTAS UNIFICADAS
+-- ============================================
+CREATE SYNONYM dbo.Cmp_OrdenesCompraUnificadas
+    FOR Purchasing.vw_PurchaseOrdersUnificados;
+
+CREATE SYNONYM dbo.Cmp_LineasOrdenCompraUnificadas
+    FOR Purchasing.vw_PurchaseOrderLinesUnificados;
+
+-- ============================================
+-- TABLAS COMUNES
+-- ============================================
+CREATE SYNONYM dbo.Gen_PersonasPrivadas
+    FOR Application.PeoplePrivate;
+
+CREATE SYNONYM dbo.Gen_MetodosEntrega
+    FOR Application.DeliveryMethods;
+
+CREATE SYNONYM dbo.Gen_Ciudades
+    FOR Application.Cities;
+
+CREATE SYNONYM dbo.Gen_Provincias
+    FOR Application.StateProvinces;
+
+CREATE SYNONYM dbo.Gen_Paises
+    FOR Application.Countries;
 GO

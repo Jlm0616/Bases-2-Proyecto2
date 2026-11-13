@@ -1,3 +1,4 @@
+
 USE WWI_Limon;
 GO
 
@@ -6,61 +7,81 @@ GO
 -- Sinónimos del nodo Limón (misma estructura que San José)
 -- ============================================================================
 
--- Clientes
-DROP SYNONYM IF EXISTS Cli_Clientes;
-DROP SYNONYM IF EXISTS Cli_CategoriasCliente;
-DROP SYNONYM IF EXISTS Cli_GruposCompra;
-CREATE SYNONYM Cli_Clientes          FOR Sales.Customers;
-CREATE SYNONYM Cli_CategoriasCliente FOR Sales.CustomerCategories;
-CREATE SYNONYM Cli_GruposCompra      FOR Sales.BuyingGroups;
+-- ============================================
+-- CLIENTES
+-- ============================================
+CREATE SYNONYM dbo.Cli_Clientes
+    FOR Sales.Customers;
 
--- Proveedores
-DROP SYNONYM IF EXISTS Prov_Proveedores;
-DROP SYNONYM IF EXISTS Prov_CategoriasProveedor;
-CREATE SYNONYM Prov_Proveedores         FOR Purchasing.Suppliers;
-CREATE SYNONYM Prov_CategoriasProveedor FOR Purchasing.SupplierCategories;
+CREATE SYNONYM dbo.Cli_CategoriasCliente
+    FOR Sales.CustomerCategories;
 
--- Inventario / Productos
-DROP SYNONYM IF EXISTS Inv_Articulos;
-DROP SYNONYM IF EXISTS Inv_GruposArticulo;
-DROP SYNONYM IF EXISTS Inv_ArticuloGrupo;
-DROP SYNONYM IF EXISTS Inv_ExistenciasArticulo;
-DROP SYNONYM IF EXISTS Inv_Colores;
-DROP SYNONYM IF EXISTS Inv_TiposEmpaque;
-CREATE SYNONYM Inv_Articulos           FOR Warehouse.StockItems;
-CREATE SYNONYM Inv_GruposArticulo      FOR Warehouse.StockGroups;
-CREATE SYNONYM Inv_ArticuloGrupo       FOR Warehouse.StockItemStockGroups;
-CREATE SYNONYM Inv_ExistenciasArticulo FOR Warehouse.StockItemHoldings;
-CREATE SYNONYM Inv_Colores             FOR Warehouse.Colors;
-CREATE SYNONYM Inv_TiposEmpaque        FOR Warehouse.PackageTypes;
+CREATE SYNONYM dbo.Cli_GruposCompra
+    FOR Sales.BuyingGroups;
 
--- Ventas
-DROP SYNONYM IF EXISTS Vta_Facturas;
-DROP SYNONYM IF EXISTS Vta_LineasFactura;
-CREATE SYNONYM Vta_Facturas      FOR Sales.Invoices;
-CREATE SYNONYM Vta_LineasFactura FOR Sales.InvoiceLines;
+-- ============================================
+-- PROVEEDORES
+-- ============================================
+CREATE SYNONYM dbo.Prov_Proveedores
+    FOR Purchasing.Suppliers;
 
--- Compras
-DROP SYNONYM IF EXISTS Cmp_OrdenesCompra;
-DROP SYNONYM IF EXISTS Cmp_LineasOrdenCompra;
-CREATE SYNONYM Cmp_OrdenesCompra     FOR Purchasing.PurchaseOrders;
-CREATE SYNONYM Cmp_LineasOrdenCompra FOR Purchasing.PurchaseOrderLines;
+CREATE SYNONYM dbo.Prov_CategoriasProveedor
+    FOR Purchasing.SupplierCategories;
 
--- Comunes
-DROP SYNONYM IF EXISTS Gen_Personas;
-DROP SYNONYM IF EXISTS Gen_MetodosEntrega;
-DROP SYNONYM IF EXISTS Gen_Ciudades;
-DROP SYNONYM IF EXISTS Gen_Provincias;
-DROP SYNONYM IF EXISTS Gen_Paises;
-CREATE SYNONYM Gen_Personas       FOR Application.People;
-CREATE SYNONYM Gen_MetodosEntrega FOR Application.DeliveryMethods;
-CREATE SYNONYM Gen_Ciudades       FOR Application.Cities;
-CREATE SYNONYM Gen_Provincias     FOR Application.StateProvinces;
-CREATE SYNONYM Gen_Paises         FOR Application.Countries;
-GO
+-- ============================================
+-- INVENTARIO / PRODUCTOS
+-- ============================================
+CREATE SYNONYM dbo.Inv_Articulos
+    FOR Warehouse.StockItems;
 
--- Verificación
-SELECT name AS Sinonimo, base_object_name AS Apunta_A
-FROM sys.synonyms
-ORDER BY name;
+CREATE SYNONYM dbo.Inv_GruposArticulo
+    FOR Warehouse.StockGroups;
+
+CREATE SYNONYM dbo.Inv_ArticuloGrupo
+    FOR Warehouse.StockItemStockGroups;
+
+CREATE SYNONYM dbo.Inv_ExistenciasArticulo
+    FOR Warehouse.StockItemHoldings;
+
+CREATE SYNONYM dbo.Inv_Colores
+    FOR Warehouse.Colors;
+
+CREATE SYNONYM dbo.Inv_TiposEmpaque
+    FOR Warehouse.PackageTypes;
+
+-- ============================================
+-- VENTAS
+-- ============================================
+CREATE SYNONYM dbo.Vta_Facturas
+    FOR Sales.Invoices;
+
+CREATE SYNONYM dbo.Vta_LineasFactura
+    FOR Sales.InvoiceLines;
+
+-- ============================================
+-- COMPRAS
+-- ============================================
+CREATE SYNONYM dbo.Cmp_OrdenesCompra
+    FOR Purchasing.PurchaseOrders;
+
+CREATE SYNONYM dbo.Cmp_LineasOrdenCompra
+    FOR Purchasing.PurchaseOrderLines;
+
+-- ============================================
+-- TABLAS COMUNES
+-- ============================================
+CREATE SYNONYM dbo.Gen_Personas
+    FOR Application.People;
+
+CREATE SYNONYM dbo.Gen_MetodosEntrega
+    FOR Application.DeliveryMethods;
+
+CREATE SYNONYM dbo.Gen_Ciudades
+    FOR Application.Cities;
+
+CREATE SYNONYM dbo.Gen_Provincias
+    FOR Application.StateProvinces;
+
+CREATE SYNONYM dbo.Gen_Paises
+    FOR Application.Countries;
 GO
