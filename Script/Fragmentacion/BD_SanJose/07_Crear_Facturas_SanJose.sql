@@ -51,10 +51,7 @@ CREATE TABLE Sales.Invoices (
         REFERENCES Sales.Customers(CustomerID),
     CONSTRAINT FK_Invoices_BillToCustomer
         FOREIGN KEY (BillToCustomerID)
-        REFERENCES Sales.Customers(CustomerID),
-    CONSTRAINT FK_Invoices_Orders
-        FOREIGN KEY (OrderID)
-        REFERENCES Sales.Orders(OrderID)
+        REFERENCES Sales.Customers(CustomerID)
 );
 GO
 
