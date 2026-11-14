@@ -102,18 +102,3 @@ BEGIN
     WHERE CP.CustomerID = @CustomerID;
 END;
 GO
-
--- ============================================
--- PRUEBA: CONSULTAR DATOS PRIVADOS
--- ============================================
-
-DECLARE @CustomerID INT;
-
-SELECT TOP (1)
-    @CustomerID = CustomerID
-FROM dbo.Cli_ClientesPrivados
-ORDER BY CustomerID;
-
-EXEC dbo.Cli_sp_DetalleClientePrivado
-    @CustomerID = @CustomerID;
-GO
