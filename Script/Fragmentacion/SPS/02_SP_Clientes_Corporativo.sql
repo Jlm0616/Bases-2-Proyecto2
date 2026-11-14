@@ -70,6 +70,9 @@ GO
 -- 02. DETALLE PRIVADO DEL CLIENTE
 -- ============================================
 
+USE WWI_Corporativo;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.Cli_sp_DetalleClientePrivado
     @CustomerID INT
 AS
@@ -84,6 +87,10 @@ BEGIN
         DM.DeliveryMethodName          AS MetodoEntrega,
         CP.DeliveryCityID              AS IdCiudadEntrega,
         CIU.CityName                   AS CiudadEntrega,
+        CP.PostalCityID                AS IdCiudadPostal,
+        CP.CreditLimit                 AS LimiteCredito,
+        CP.DeliveryRun                 AS RutaEntrega,
+        CP.RunPosition                 AS PosicionRuta,
         CP.DeliveryPostalCode          AS CodigoPostalEntrega,
         CP.PhoneNumber                 AS Telefono,
         CP.FaxNumber                   AS Fax,
@@ -94,7 +101,7 @@ BEGIN
         CP.PostalAddressLine2          AS DireccionPostalLinea2,
         CP.PostalPostalCode            AS CodigoPostalPostal,
         CP.DeliveryLocation.STAsText() AS UbicacionEntregaMapa
-    FROM dbo.Cli_ClientesPrivados AS CP
+    FROM Sales.CustomersPrivate AS CP
     LEFT JOIN dbo.Gen_MetodosEntrega AS DM
         ON DM.DeliveryMethodID = CP.DeliveryMethodID
     LEFT JOIN dbo.Gen_Ciudades AS CIU
