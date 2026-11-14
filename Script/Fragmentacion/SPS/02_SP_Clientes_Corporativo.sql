@@ -1,21 +1,75 @@
-
 -- ============================================================================
 -- 02_SP_Clientes_Corporativo.sql
 -- Stored Procedures de Clientes - Corporativo
 -- Proyecto 2 Bases de Datos II
 --
 -- Descripcion:
---   Consulta los datos privados de un cliente.
---   Los datos generales se consultan desde las sucursales.
---   No realiza operaciones CRUD.
+--   Consulta los datos privados de clientes.
+--   Genera identificadores unicos para nuevos clientes.
+--   Los datos generales se almacenan en las sucursales.
+--   Los datos privados se almacenan en Corporativo.
 -- ============================================================================
 
 USE WWI_Corporativo;
 GO
 
 -- ============================================
--- 01. DETALLE PRIVADO DEL CLIENTE
+-- 00. GENERACION DE IDENTIFICADORES DE CLIENTES
 -- ============================================
+
+-- Crear la secuencia solamente si no existe.
+-- El identificador inicial se calcula a partir
+-- del mayor CustomerID registrado en Corporativo.
+-- Antes de una instalacion nueva, verificar que
+-- las sucursales no tengan identificadores mayores.
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.sequences
+    WHERE name = 'Seq_CustomerID'
+      AND schema_id = SCHEMA_ID('Sales')
+)
+BEGIN
+    DECLARE @SiguienteID INT;
+
+    SELECT
+        @SiguienteID = ISNULL(MAX(CustomerID), 0) + 1
+    FROM Sales.CustomersPrivate;
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    SET @SQL = N'
+        CREATE SEQUENCE Sales.Seq_CustomerID
+        AS INT
+        START WITH ' + CAST(@SiguienteID AS NVARCHAR(20)) + N'
+        INCREMENT BY 1
+        NO CYCLE
+        NO CACHE;
+    ';
+
+    EXEC sys.sp_executesql @SQL;
+END;
+GO
+
+-- ============================================
+-- 01. PROCEDIMIENTO PARA GENERAR CUSTOMERID
+-- ============================================
+
+CREATE OR ALTER PROCEDURE dbo.Cli_sp_GenerarCustomerID
+    @NuevoCustomerID INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SET @NuevoCustomerID =
+        NEXT VALUE FOR Sales.Seq_CustomerID;
+END;
+GO
+
+-- ============================================
+-- 02. DETALLE PRIVADO DEL CLIENTE
+-- ============================================
+
 CREATE OR ALTER PROCEDURE dbo.Cli_sp_DetalleClientePrivado
     @CustomerID INT
 AS
@@ -50,8 +104,9 @@ END;
 GO
 
 -- ============================================
--- PRUEBA
+-- PRUEBA: CONSULTAR DATOS PRIVADOS
 -- ============================================
+
 DECLARE @CustomerID INT;
 
 SELECT TOP (1)
