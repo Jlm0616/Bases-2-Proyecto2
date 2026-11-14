@@ -77,3 +77,46 @@ BEGIN
     WHERE SP.SupplierID = @SupplierID;
 END;
 GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.sequences
+    WHERE name = 'Seq_SupplierID'
+      AND schema_id = SCHEMA_ID('Purchasing')
+)
+BEGIN
+    DECLARE @SiguienteID INT;
+
+    SELECT @SiguienteID =
+        ISNULL(MAX(SupplierID), 0) + 1
+    FROM Purchasing.SuppliersPrivate;
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    SET @SQL = N'
+        CREATE SEQUENCE Purchasing.Seq_SupplierID
+        AS INT
+        START WITH ' + CAST(@SiguienteID AS NVARCHAR(20)) + N'
+        INCREMENT BY 1
+        NO CYCLE
+        NO CACHE;
+    ';
+
+    EXEC sys.sp_executesql @SQL;
+END;
+GO
+
+-- Procedimiento para generar identificadores
+CREATE OR ALTER PROCEDURE dbo.Prov_sp_GenerarSupplierID
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @NuevoSupplierID INT;
+
+    SET @NuevoSupplierID =
+        NEXT VALUE FOR Purchasing.Seq_SupplierID;
+
+    SELECT @NuevoSupplierID AS SupplierID;
+END;
+GO

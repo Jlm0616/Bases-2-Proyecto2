@@ -143,15 +143,3 @@ BEGIN
     SELECT @SupplierID AS SupplierID;
 END;
 GO
-
--- Verificacion de creacion (no modifica datos).
-SELECT name AS Procedimiento
-FROM sys.procedures
-WHERE schema_id = SCHEMA_ID('dbo')
-  AND name IN (
-      'Prov_sp_InsertarProveedorPrivado',
-      'Prov_sp_ActualizarProveedorPrivado',
-      'Prov_sp_EliminarProveedorPrivado'
-  )
-ORDER BY name;
-GO
