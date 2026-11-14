@@ -86,9 +86,3 @@ BEGIN
     CLOSE SYMMETRIC KEY KeyUsuariosWWI;
 END;
 GO
-
--- 5. USUARIOS DE PRUEBA
---EXEC Application.Usr_sp_CrearUsuario 'admin_sj',  'Admin123!', 'Administrador San Jose', 'Administrador', 'admin.sj@wwi.com',  '2025-01-15', 'SanJose';
---EXEC Application.Usr_sp_CrearUsuario 'admin_lim', 'Admin123!', 'Administrador Limon',    'Administrador', 'admin.lim@wwi.com', '2025-01-15', 'Limon';
---EXEC Application.Usr_sp_CrearUsuario 'corp',      'Corp123!',  'Gerente Corporativo',    'Corporativo',   'corp@wwi.com',      '2024-06-01', 'Corporativo';
---GO
