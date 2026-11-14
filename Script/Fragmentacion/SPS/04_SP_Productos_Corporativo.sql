@@ -6,7 +6,8 @@
 --
 -- Descripcion:
 --   Consulta el catalogo compartido de productos.
---   No consulta existencias locales de las sucursales.
+--   El catalogo no consulta existencias locales directamente.
+--   Los SP de inventario consultan Warehouse.InventarioUnificado.
 -- ============================================================================
 
 USE WWI_Corporativo;
@@ -131,5 +132,73 @@ BEGIN
     LEFT JOIN dbo.Inv_TiposEmpaque AS OP
         ON OP.PackageTypeID = SI.OuterPackageID
     WHERE SI.StockItemID = @StockItemID;
+END;
+GO
+
+
+-- ============================================
+-- 04. INVENTARIO POR SUCURSAL PAGINADO
+-- ============================================
+CREATE OR ALTER PROCEDURE dbo.Inv_sp_InventarioPorSucursal
+    @Sucursal VARCHAR(20),
+    @StockItemID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 25
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Sucursal IS NULL OR @Sucursal NOT IN ('SanJose', 'Limon')
+    BEGIN
+        RAISERROR('Sucursal no valida', 16, 1);
+        RETURN;
+    END;
+
+    IF @PageNumber IS NULL OR @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize IS NULL OR @PageSize < 1 SET @PageSize = 25;
+    IF @PageSize > 1000 SET @PageSize = 1000;
+
+    DECLARE @Offset BIGINT = (CAST(@PageNumber AS BIGINT) - 1) * @PageSize;
+
+    SELECT
+        StockItemID AS IdProducto,
+        @Sucursal AS Sucursal,
+        CASE
+            WHEN @Sucursal = 'SanJose' THEN InventarioSanJose
+            WHEN @Sucursal = 'Limon' THEN InventarioLimon
+        END AS CantidadInventario
+    FROM Warehouse.InventarioUnificado
+    WHERE @StockItemID IS NULL OR StockItemID = @StockItemID
+    ORDER BY StockItemID
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+
+-- ============================================
+-- 05. INVENTARIO CONSOLIDADO PAGINADO
+-- ============================================
+CREATE OR ALTER PROCEDURE dbo.Inv_sp_InventarioConsolidado
+    @StockItemID INT = NULL,
+    @PageNumber INT = 1,
+    @PageSize INT = 25
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @PageNumber IS NULL OR @PageNumber < 1 SET @PageNumber = 1;
+    IF @PageSize IS NULL OR @PageSize < 1 SET @PageSize = 25;
+    IF @PageSize > 1000 SET @PageSize = 1000;
+
+    DECLARE @Offset BIGINT = (CAST(@PageNumber AS BIGINT) - 1) * @PageSize;
+
+    SELECT
+        StockItemID AS IdProducto,
+        InventarioSanJose,
+        InventarioLimon,
+        InventarioTotal
+    FROM Warehouse.InventarioUnificado
+    WHERE @StockItemID IS NULL OR StockItemID = @StockItemID
+    ORDER BY StockItemID
+    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO

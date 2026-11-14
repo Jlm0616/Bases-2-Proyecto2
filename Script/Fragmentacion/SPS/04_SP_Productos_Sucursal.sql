@@ -128,7 +128,7 @@ BEGIN
         SI.RecommendedRetailPrice  AS PrecioVenta,
         SI.TypicalWeightPerUnit    AS Peso,
         SI.SearchDetails           AS PalabrasClave,
-        H.QuantityOnHand           AS CantidadDisponible,
+        H.QuantityOnHand           AS CantidadEnInventario,
         H.BinLocation              AS Ubicacion
     FROM dbo.Inv_Articulos AS SI
     LEFT JOIN dbo.Prov_Proveedores AS PR
