@@ -6,6 +6,8 @@ const sesiones = require('express-session');
 
 const rutasAutenticacion = require('./rutas/rutasAutenticacion');
 const rutasClientes = require('./rutas/rutasClientes');
+const rutasProveedores = require('./rutas/rutasProveedores');
+const rutasProductos = require('./rutas/rutasProductos');
 
 const aplicacion = express();
 const puerto = process.env.PORT || 3000;
@@ -43,6 +45,8 @@ aplicacion.get('/api/health', (solicitud, respuesta) => {
 
 aplicacion.use('/api/autenticacion', rutasAutenticacion);
 aplicacion.use('/api/clientes', rutasClientes);
+aplicacion.use('/api/proveedores', rutasProveedores);
+aplicacion.use('/api/productos', rutasProductos);
 
 aplicacion.listen(puerto, () => {
   console.log(`API ejecutándose en http://localhost:${puerto}`);
