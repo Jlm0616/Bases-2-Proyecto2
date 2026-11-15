@@ -10,8 +10,6 @@
 -- ADVERTENCIA: ambas sucursales publican estas tablas. Probar la replicacion
 -- y el manejo de conflictos antes de realizar escrituras concurrentes.
 -- ============================================================================
-USE WWI_Limon; -- Cambiar a WWI_SanJose al ejecutar en San Jose.
-GO
 
 -- INSERT de datos generales.
 CREATE OR ALTER PROCEDURE dbo.Prov_sp_InsertarProveedorGeneral
@@ -89,16 +87,4 @@ BEGIN
 
     SELECT @SupplierID AS SupplierID;
 END;
-GO
-
--- Verificacion de creacion (no modifica datos).
-SELECT name AS Procedimiento
-FROM sys.procedures
-WHERE schema_id = SCHEMA_ID('dbo')
-  AND name IN (
-      'Prov_sp_InsertarProveedorGeneral',
-      'Prov_sp_ActualizarProveedorGeneral',
-      'Prov_sp_EliminarProveedorGeneral'
-  )
-ORDER BY name;
 GO

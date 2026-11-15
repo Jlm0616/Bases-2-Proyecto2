@@ -4,9 +4,6 @@
 -- Para Limon: cambiar solo la linea USE.
 -- ============================================================================
 
-USE WWI_Limon;
-GO
-
 CREATE OR ALTER PROCEDURE Vta_sp_ListarVentas
     @NombreCliente   NVARCHAR(100)  = NULL,
     @FechaInicio     DATE           = NULL,
@@ -109,13 +106,4 @@ BEGIN
     LEFT JOIN Inv_Articulos AS SI ON SI.StockItemID = IL.StockItemID
     WHERE IL.InvoiceID = @InvoiceID;
 END
-GO
-
--- Pruebas
-EXEC Vta_sp_ListarVentas @PageNumber = 1, @PageSize = 5;
-EXEC Vta_sp_ContarVentas;
-SELECT COUNT(*) AS FacturasReales FROM Vta_Facturas;
-
-DECLARE @id INT = (SELECT TOP 1 InvoiceID FROM Vta_Facturas ORDER BY InvoiceID);
-EXEC Vta_sp_DetalleVenta @id;
 GO

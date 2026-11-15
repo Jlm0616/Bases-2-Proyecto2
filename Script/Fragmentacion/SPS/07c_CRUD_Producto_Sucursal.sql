@@ -1,6 +1,17 @@
-USE WWI_Limon;
-GO
 
+-- ============================================================================
+-- 07c_CRUD_Producto_Sucursal.sql
+-- CRUD de productos para San Jose y Limon (datos generales).
+-- Ejecutar en WWI_Limon y en WWI_SanJose (cambiar USE).
+-- Los procedimientos permiten crear, actualizar y eliminar productos.
+-- StockItemID debe generarse en Corporativo, no localmente.
+-- ADVERTENCIA: ambas sucursales publican estas tablas. Probar la replicacion
+-- y el manejo de conflictos antes de realizar escrituras concurrentes.
+-- ============================================================================
+
+-- INSERT de productos.
+-- Valida los datos obligatorios, la existencia de las referencias
+-- y que el identificador del producto no este registrado.
 CREATE OR ALTER PROCEDURE dbo.Inv_sp_CrearProducto
     @StockItemID INT,
     @Nombre NVARCHAR(100),
@@ -24,15 +35,15 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    -- Validar ID
+    -- Validar ID.
     IF @StockItemID IS NULL OR @StockItemID <= 0
         THROW 50001, 'ID de producto no valido.', 1;
 
-    -- Validar nombre
+    -- Validar nombre.
     IF NULLIF(LTRIM(RTRIM(@Nombre)), N'') IS NULL
         THROW 50002, 'El nombre del producto es obligatorio.', 1;
 
-    -- Verificar que el producto no exista
+    -- Verificar que el producto no exista.
     IF EXISTS (
         SELECT 1
         FROM Warehouse.StockItems
@@ -40,7 +51,7 @@ BEGIN
     )
         THROW 50003, 'El ID del producto ya existe.', 1;
 
-    -- Validar proveedor
+    -- Validar proveedor.
     IF NOT EXISTS (
         SELECT 1
         FROM Purchasing.Suppliers
@@ -48,7 +59,7 @@ BEGIN
     )
         THROW 50004, 'El proveedor no existe.', 1;
 
-    -- Validar unidad de empaque
+    -- Validar unidad de empaque.
     IF NOT EXISTS (
         SELECT 1
         FROM Warehouse.PackageTypes
@@ -56,7 +67,7 @@ BEGIN
     )
         THROW 50005, 'La unidad de empaque no existe.', 1;
 
-    -- Validar empaque exterior
+    -- Validar empaque exterior.
     IF NOT EXISTS (
         SELECT 1
         FROM Warehouse.PackageTypes
@@ -64,7 +75,7 @@ BEGIN
     )
         THROW 50006, 'El empaque exterior no existe.', 1;
 
-    -- Validar color
+    -- Validar color.
     IF @ColorID IS NOT NULL
        AND NOT EXISTS (
            SELECT 1
@@ -73,7 +84,7 @@ BEGIN
        )
         THROW 50007, 'El color no existe.', 1;
 
-    -- Crear producto
+    -- Crear producto.
     INSERT INTO Warehouse.StockItems (
         StockItemID,
         StockItemName,
@@ -117,7 +128,7 @@ BEGIN
         CONVERT(DATETIME2(7), '9999-12-31 23:59:59.9999999')
     );
 
-    -- Devolver producto creado
+    -- Devolver producto creado.
     SELECT
         StockItemID AS IdProducto,
         StockItemName AS NombreProducto
@@ -126,6 +137,9 @@ BEGIN
 END;
 GO
 
+-- UPDATE de productos.
+-- Verifica que el producto exista y valida las referencias
+-- antes de modificar sus datos generales.
 CREATE OR ALTER PROCEDURE dbo.Inv_sp_ActualizarProducto
     @StockItemID INT,
     @Nombre NVARCHAR(100),
@@ -149,7 +163,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    -- Validar producto
+    -- Validar producto.
     IF NOT EXISTS (
         SELECT 1
         FROM Warehouse.StockItems
@@ -157,11 +171,11 @@ BEGIN
     )
         THROW 50001, 'El producto no existe.', 1;
 
-    -- Validar nombre
+    -- Validar nombre.
     IF NULLIF(LTRIM(RTRIM(@Nombre)), N'') IS NULL
         THROW 50002, 'El nombre es obligatorio.', 1;
 
-    -- Validar proveedor
+    -- Validar proveedor.
     IF NOT EXISTS (
         SELECT 1
         FROM Purchasing.Suppliers
@@ -169,7 +183,7 @@ BEGIN
     )
         THROW 50003, 'El proveedor no existe.', 1;
 
-    -- Validar empaques
+    -- Validar empaques.
     IF NOT EXISTS (
         SELECT 1
         FROM Warehouse.PackageTypes
@@ -184,7 +198,7 @@ BEGIN
     )
         THROW 50005, 'El empaque exterior no existe.', 1;
 
-    -- Validar color
+    -- Validar color.
     IF @ColorID IS NOT NULL
        AND NOT EXISTS (
            SELECT 1
@@ -193,7 +207,7 @@ BEGIN
        )
         THROW 50006, 'El color no existe.', 1;
 
-    -- Actualizar producto
+    -- Actualizar producto.
     UPDATE Warehouse.StockItems
     SET
         StockItemName = @Nombre,
@@ -214,7 +228,7 @@ BEGIN
         LastEditedBy = @UsuarioEditor
     WHERE StockItemID = @StockItemID;
 
-    -- Devolver producto actualizado
+    -- Devolver producto actualizado.
     SELECT
         StockItemID AS IdProducto,
         StockItemName AS NombreProducto,
@@ -224,6 +238,9 @@ BEGIN
 END;
 GO
 
+-- DELETE de productos.
+-- Elimina primero las asociaciones con grupos de articulos.
+-- Las claves foraneas de otros registros pueden impedir la eliminacion.
 CREATE OR ALTER PROCEDURE dbo.Inv_sp_EliminarProducto
     @StockItemID INT
 AS
@@ -231,7 +248,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    -- Verificar existencia
+    -- Verificar existencia.
     IF NOT EXISTS (
         SELECT 1
         FROM Warehouse.StockItems
@@ -242,11 +259,11 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Eliminar asociaciones con grupos
+        -- Eliminar asociaciones con grupos.
         DELETE FROM Warehouse.StockItemStockGroups
         WHERE StockItemID = @StockItemID;
 
-        -- Eliminar producto
+        -- Eliminar producto.
         DELETE FROM Warehouse.StockItems
         WHERE StockItemID = @StockItemID;
 

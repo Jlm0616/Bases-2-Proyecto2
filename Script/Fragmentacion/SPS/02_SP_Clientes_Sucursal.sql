@@ -8,9 +8,6 @@
 -- Las operaciones CRUD se implementan en un archivo separado.
 -- ============================================================================
 
-USE WWI_Limon;
-GO
-
 -- ============================================
 -- 01. LISTAR CLIENTES PAGINADO
 -- ============================================

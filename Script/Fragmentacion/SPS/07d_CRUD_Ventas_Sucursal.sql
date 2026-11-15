@@ -1,9 +1,17 @@
-
-USE WWI_Limon;
-GO
+-- ============================================================================
+-- 07d_CRUD_Ventas_Sucursal.sql
+-- CRUD de ventas para San Jose y Limon.
+-- Ejecutar en WWI_Limon y en WWI_SanJose (cambiar USE).
+-- Crea el tipo de tabla para lineas de factura y las secuencias de IDs.
+-- Permite insertar ventas con sus lineas y descuento de inventario,
+-- actualizar datos del encabezado y eliminar ventas reintegrando inventario.
+-- ADVERTENCIA: verificar la unicidad de los IDs entre sucursales y probar
+-- la replicacion antes de realizar escrituras concurrentes.
+-- ============================================================================
 
 -- ============================================================
--- 1. TIPO DE TABLA PARA LAS LINEAS DE FACTURA
+-- TIPO DE TABLA PARA LAS LINEAS DE FACTURA
+-- Agrupa productos, cantidades, precios y empaques de una factura.
 -- ============================================================
 
 IF TYPE_ID(N'dbo.TipoLineasFactura') IS NULL
@@ -26,7 +34,8 @@ END;
 GO
 
 -- ============================================================
--- 2. SECUENCIA PARA LOS IDs DE FACTURAS
+-- SECUENCIA PARA LOS IDs DE FACTURAS
+-- Se crea solo si no existe, iniciando despues del mayor InvoiceID local.
 -- ============================================================
 
 IF NOT EXISTS (
@@ -62,7 +71,8 @@ END;
 GO
 
 -- ============================================================
--- 3. SECUENCIA PARA LOS IDs DE DETALLES
+-- SECUENCIA PARA LOS IDs DE DETALLES
+-- Se crea solo si no existe, iniciando despues del mayor InvoiceLineID local.
 -- ============================================================
 
 IF NOT EXISTS (
@@ -98,7 +108,9 @@ END;
 GO
 
 -- ============================================================
--- 4. INSERTAR VENTA
+-- INSERT DE VENTAS
+-- Valida referencias y lineas, descuenta inventario e inserta la factura
+-- con sus detalles en una misma transaccion.
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Vta_sp_InsertarVenta
@@ -394,7 +406,8 @@ END;
 GO
 
 -- ============================================================
--- 5. ACTUALIZAR VENTA
+-- UPDATE DE VENTAS
+-- Modifica instrucciones de entrega y numero de orden del cliente.
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Vta_sp_ActualizarVenta
@@ -447,7 +460,9 @@ END;
 GO
 
 -- ============================================================
--- 6. ELIMINAR VENTA
+-- DELETE DE VENTAS
+-- Reintegra cantidades al inventario y elimina detalles y encabezado
+-- dentro de una transaccion.
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Vta_sp_EliminarVenta
@@ -525,7 +540,8 @@ END;
 GO
 
 -- ============================================================
--- 7. VERIFICACION FINAL
+-- VERIFICACION FINAL
+-- Consulta los procedimientos, secuencias y tipo de tabla instalados.
 -- ============================================================
 
 SELECT
