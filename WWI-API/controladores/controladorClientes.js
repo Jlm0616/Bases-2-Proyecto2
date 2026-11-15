@@ -1,3 +1,4 @@
+
 const {
   sql,
   conectarSanJose,
@@ -7,8 +8,6 @@ const {
 
 /**
  * Conecta a la base de datos de la sucursal especificada
- * @param {string} sucursal - Nombre de la sucursal ('SanJose' o 'Limon')
- * @returns {Promise<sql.ConnectionPool|null>} Pool de conexión o null si la sucursal no es válida
  */
 async function conectarSucursal(sucursal) {
   if (sucursal === 'SanJose') {
@@ -24,8 +23,6 @@ async function conectarSucursal(sucursal) {
 
 /**
  * Valida que un ID sea un entero positivo válido
- * @param {number} id - ID a validar
- * @returns {boolean} true si el ID es válido
  */
 function idValido(id) {
   return Number.isInteger(id) && id > 0 && id <= 2147483647;
@@ -33,8 +30,6 @@ function idValido(id) {
 
 /**
  * Lista clientes paginados con filtros opcionales
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
  */
 async function listarClientes(solicitud, respuesta) {
   try {
@@ -99,9 +94,7 @@ async function listarClientes(solicitud, respuesta) {
 }
 
 /**
- * Obtiene el detalle completo de un cliente (datos públicos y privados)
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Obtiene el detalle completo de un cliente
  */
 async function obtenerDetalleCliente(solicitud, respuesta) {
   try {
@@ -162,20 +155,31 @@ async function obtenerDetalleCliente(solicitud, respuesta) {
 }
 
 /**
- * Crea un nuevo cliente con datos públicos en la sucursal y datos privados en Corporativo
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Crea un cliente con datos públicos en la sucursal
+ * y datos privados en Corporativo.
  */
 async function crearCliente(solicitud, respuesta) {
   let idCliente = null;
   let publicoInsertado = false;
+  let conexionSucursal = null;
+  let conexionCorporativo = null;
+
+  // Evita enviar NULL en campos que necesitan un valor.
+  const textoOPredeterminado = (valor, predeterminado) => {
+    if (valor === null || valor === undefined) {
+      return predeterminado;
+    }
+
+    const texto = String(valor).trim();
+    return texto.length > 0 ? texto : predeterminado;
+  };
 
   try {
     const sucursal = solicitud.session.usuario.sucursal;
-    const datosPublicos = solicitud.body.datosPublicos;
-    const datosPrivados = solicitud.body.datosPrivados;
+    const datosPublicos = solicitud.body?.datosPublicos;
+    const datosPrivados = solicitud.body?.datosPrivados;
 
-    const conexionSucursal = await conectarSucursal(sucursal);
+    conexionSucursal = await conectarSucursal(sucursal);
 
     if (!conexionSucursal) {
       return respuesta.status(403).json({
@@ -194,14 +198,16 @@ async function crearCliente(solicitud, respuesta) {
       });
     }
 
-    const conexionCorporativo = await conectarCorporativo();
+    conexionCorporativo = await conectarCorporativo();
 
+    // Generar ID único desde Corporativo.
     const resultadoID = await conexionCorporativo.request()
       .output('NuevoCustomerID', sql.Int)
       .execute('dbo.Cli_sp_GenerarCustomerID');
 
     idCliente = resultadoID.output.NuevoCustomerID;
 
+    // Insertar datos generales en la sucursal.
     await conexionSucursal.request()
       .input('CustomerID', sql.Int, idCliente)
       .input('NombreCliente', sql.NVarChar(100), datosPublicos.NombreCliente)
@@ -215,6 +221,18 @@ async function crearCliente(solicitud, respuesta) {
 
     publicoInsertado = true;
 
+    // Valores predeterminados para campos privados.
+    const telefono = textoOPredeterminado(
+      datosPrivados.Telefono,
+      'Sin definir'
+    );
+
+    const fax = textoOPredeterminado(
+      datosPrivados.Fax,
+      telefono
+    );
+
+    // Insertar datos privados en Corporativo.
     await conexionCorporativo.request()
       .input('CustomerID', sql.Int, idCliente)
       .input('PrimaryContactID', sql.Int, datosPrivados.IdContactoPrimario)
@@ -223,15 +241,58 @@ async function crearCliente(solicitud, respuesta) {
       .input('AlternateContactID', sql.Int, datosPrivados.IdContactoAlternativo)
       .input('CreditLimit', sql.Decimal(18, 2), datosPrivados.LimiteCredito)
       .input('PostalCityID', sql.Int, datosPrivados.IdCiudadPostal)
-      .input('PhoneNumber', sql.NVarChar(20), datosPrivados.Telefono)
-      .input('FaxNumber', sql.NVarChar(20), datosPrivados.Fax)
-      .input('WebsiteURL', sql.NVarChar(256), datosPrivados.SitioWeb)
-      .input('DeliveryAddressLine1', sql.NVarChar(60), datosPrivados.DireccionEntregaLinea1)
-      .input('DeliveryAddressLine2', sql.NVarChar(60), datosPrivados.DireccionEntregaLinea2)
-      .input('DeliveryPostalCode', sql.NVarChar(10), datosPrivados.CodigoPostalEntrega)
-      .input('PostalAddressLine1', sql.NVarChar(60), datosPrivados.DireccionPostalLinea1)
-      .input('PostalAddressLine2', sql.NVarChar(60), datosPrivados.DireccionPostalLinea2)
-      .input('PostalPostalCode', sql.NVarChar(10), datosPrivados.CodigoPostalPostal)
+      .input('PhoneNumber', sql.NVarChar(20), telefono)
+      .input('FaxNumber', sql.NVarChar(20), fax)
+      .input(
+        'WebsiteURL',
+        sql.NVarChar(256),
+        textoOPredeterminado(
+          datosPrivados.SitioWeb,
+          'http://www.AunNoSe.com'
+        )
+      )
+      .input(
+        'DeliveryAddressLine1',
+        sql.NVarChar(60),
+        textoOPredeterminado(
+          datosPrivados.DireccionEntregaLinea1,
+          'Sin definir'
+        )
+      )
+      .input(
+        'DeliveryAddressLine2',
+        sql.NVarChar(60),
+        datosPrivados.DireccionEntregaLinea2
+      )
+      .input(
+        'DeliveryPostalCode',
+        sql.NVarChar(10),
+        textoOPredeterminado(
+          datosPrivados.CodigoPostalEntrega,
+          '00000'
+        )
+      )
+      .input(
+        'PostalAddressLine1',
+        sql.NVarChar(60),
+        textoOPredeterminado(
+          datosPrivados.DireccionPostalLinea1,
+          'Sin definir'
+        )
+      )
+      .input(
+        'PostalAddressLine2',
+        sql.NVarChar(60),
+        datosPrivados.DireccionPostalLinea2
+      )
+      .input(
+        'PostalPostalCode',
+        sql.NVarChar(10),
+        textoOPredeterminado(
+          datosPrivados.CodigoPostalPostal,
+          '00000'
+        )
+      )
       .execute('dbo.Cli_sp_InsertarClientePrivado');
 
     return respuesta.status(201).json({
@@ -243,18 +304,55 @@ async function crearCliente(solicitud, respuesta) {
   } catch (error) {
     console.error('Error al crear cliente:', error);
 
+    // Si Corporativo falla, intentar revertir la
+    // inserción previamente realizada en la sucursal.
+    let compensacion = 'no necesaria';
+
+    if (publicoInsertado && idCliente !== null) {
+      try {
+        // Comprobar si Corporativo llegó a guardar
+        // el registro antes de intentar eliminarlo.
+        const privado = await conexionCorporativo.request()
+          .input('CustomerID', sql.Int, idCliente)
+          .query(`
+            SELECT CustomerID
+            FROM Sales.CustomersPrivate
+            WHERE CustomerID = @CustomerID
+          `);
+
+        if (privado.recordset.length > 0) {
+          compensacion =
+            'pendiente: existe registro privado en Corporativo';
+        } else {
+          await conexionSucursal.request()
+            .input('CustomerID', sql.Int, idCliente)
+            .execute('dbo.Cli_sp_EliminarClienteGeneral');
+
+          compensacion = 'completada';
+          publicoInsertado = false;
+        }
+
+      } catch (errorCompensacion) {
+        console.error(
+          'No se pudo compensar el alta del cliente:',
+          errorCompensacion
+        );
+
+        compensacion = 'fallida: requiere revisión manual';
+      }
+    }
+
     return respuesta.status(500).json({
       mensaje: 'Error al crear el cliente',
       idCliente: idCliente,
-      insercionPublicaCompletada: publicoInsertado
+      insercionPublicaCompletada: publicoInsertado,
+      compensacion: compensacion
     });
   }
 }
 
 /**
- * Actualiza un cliente existente (datos públicos y privados)
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Actualiza los datos públicos y privados de un cliente.
  */
 async function actualizarCliente(solicitud, respuesta) {
   try {
@@ -306,12 +404,36 @@ async function actualizarCliente(solicitud, respuesta) {
       .input('PhoneNumber', sql.NVarChar(20), datosPrivados.Telefono)
       .input('FaxNumber', sql.NVarChar(20), datosPrivados.Fax)
       .input('WebsiteURL', sql.NVarChar(256), datosPrivados.SitioWeb)
-      .input('DeliveryAddressLine1', sql.NVarChar(60), datosPrivados.DireccionEntregaLinea1)
-      .input('DeliveryAddressLine2', sql.NVarChar(60), datosPrivados.DireccionEntregaLinea2)
-      .input('DeliveryPostalCode', sql.NVarChar(10), datosPrivados.CodigoPostalEntrega)
-      .input('PostalAddressLine1', sql.NVarChar(60), datosPrivados.DireccionPostalLinea1)
-      .input('PostalAddressLine2', sql.NVarChar(60), datosPrivados.DireccionPostalLinea2)
-      .input('PostalPostalCode', sql.NVarChar(10), datosPrivados.CodigoPostalPostal)
+      .input(
+        'DeliveryAddressLine1',
+        sql.NVarChar(60),
+        datosPrivados.DireccionEntregaLinea1
+      )
+      .input(
+        'DeliveryAddressLine2',
+        sql.NVarChar(60),
+        datosPrivados.DireccionEntregaLinea2
+      )
+      .input(
+        'DeliveryPostalCode',
+        sql.NVarChar(10),
+        datosPrivados.CodigoPostalEntrega
+      )
+      .input(
+        'PostalAddressLine1',
+        sql.NVarChar(60),
+        datosPrivados.DireccionPostalLinea1
+      )
+      .input(
+        'PostalAddressLine2',
+        sql.NVarChar(60),
+        datosPrivados.DireccionPostalLinea2
+      )
+      .input(
+        'PostalPostalCode',
+        sql.NVarChar(10),
+        datosPrivados.CodigoPostalPostal
+      )
       .execute('dbo.Cli_sp_ActualizarClientePrivado');
 
     return respuesta.json({
@@ -331,9 +453,8 @@ async function actualizarCliente(solicitud, respuesta) {
 }
 
 /**
- * Elimina un cliente (datos privados en Corporativo y datos públicos en la sucursal)
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Elimina los datos privados en Corporativo y
+ * los datos generales en la sucursal.
  */
 async function eliminarCliente(solicitud, respuesta) {
   try {

@@ -1,15 +1,16 @@
 
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { ContextoAutenticacion } from '../contextos/ContextoAutenticacion';
 import '../estilos/barraLateral.css';
 
-export default function BarraLateral() {
+export default function BarraLateral({
+  seccionActiva = 'inicio',
+  cambiarSeccion = () => {}
+}) {
   const { usuario } = useContext(ContextoAutenticacion);
-  const [seccionActiva, setSeccionActiva] = useState('inicio');
 
   const esCorporativo = usuario.rol === 'Corporativo';
 
-  // Menú provisional. Se ajustará a los requisitos del Proyecto 2.
   const opciones = esCorporativo
     ? [
         { id: 'inicio', nombre: 'Inicio', icono: '⌂' },
@@ -53,7 +54,7 @@ export default function BarraLateral() {
             className={`barra-lateral-opcion ${
               seccionActiva === opcion.id ? 'activa' : ''
             }`}
-            onClick={() => setSeccionActiva(opcion.id)}
+            onClick={() => cambiarSeccion(opcion.id)}
           >
             <span className="barra-lateral-icono" aria-hidden="true">
               {opcion.icono}
