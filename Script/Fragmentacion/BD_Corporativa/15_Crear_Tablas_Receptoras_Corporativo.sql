@@ -154,7 +154,105 @@ CREATE TABLE Sales.InvoiceLinesLimon (
 GO
 
 -- ============================================
--- VERIFICACION DE LAS 4 TABLAS DE FACTURAS
+-- SAN JOSE - ORDENES DE COMPRA
+-- ============================================
+
+IF OBJECT_ID(N'Purchasing.PurchaseOrdersSanJose', N'U') IS NULL
+BEGIN
+    CREATE TABLE Purchasing.PurchaseOrdersSanJose (
+        PurchaseOrderID INT NOT NULL,
+        SupplierID INT NOT NULL,
+        OrderDate DATE NOT NULL,
+        DeliveryMethodID INT NOT NULL,
+        ContactPersonID INT NOT NULL,
+        ExpectedDeliveryDate DATE NULL,
+        SupplierReference NVARCHAR(20) NULL,
+        IsOrderFinalized BIT NOT NULL,
+        Comments NVARCHAR(MAX) NULL,
+        InternalComments NVARCHAR(MAX) NULL,
+        LastEditedBy INT NOT NULL,
+        LastEditedWhen DATETIME2(7) NOT NULL,
+        SucursalID INT NOT NULL DEFAULT (1),
+        CONSTRAINT PK_PurchaseOrdersSanJose PRIMARY KEY (PurchaseOrderID)
+    );
+END;
+GO
+
+IF OBJECT_ID(N'Purchasing.PurchaseOrderLinesSanJose', N'U') IS NULL
+BEGIN
+    CREATE TABLE Purchasing.PurchaseOrderLinesSanJose (
+        PurchaseOrderLineID INT NOT NULL,
+        PurchaseOrderID INT NOT NULL,
+        StockItemID INT NOT NULL,
+        OrderedOuters INT NOT NULL,
+        Description NVARCHAR(100) NOT NULL,
+        ReceivedOuters INT NOT NULL,
+        PackageTypeID INT NOT NULL,
+        ExpectedUnitPricePerOuter DECIMAL(18,2) NULL,
+        LastReceiptDate DATE NULL,
+        IsOrderLineFinalized BIT NOT NULL,
+        LastEditedBy INT NOT NULL,
+        LastEditedWhen DATETIME2(7) NOT NULL,
+        SucursalID INT NOT NULL DEFAULT (1),
+        CONSTRAINT PK_PurchaseOrderLinesSanJose PRIMARY KEY (PurchaseOrderLineID),
+        CONSTRAINT FK_PurchaseOrderLinesSanJose_PurchaseOrders
+            FOREIGN KEY (PurchaseOrderID)
+            REFERENCES Purchasing.PurchaseOrdersSanJose(PurchaseOrderID)
+    );
+END;
+GO
+
+-- ============================================
+-- LIMON - ORDENES DE COMPRA
+-- ============================================
+
+IF OBJECT_ID(N'Purchasing.PurchaseOrdersLimon', N'U') IS NULL
+BEGIN
+    CREATE TABLE Purchasing.PurchaseOrdersLimon (
+        PurchaseOrderID INT NOT NULL,
+        SupplierID INT NOT NULL,
+        OrderDate DATE NOT NULL,
+        DeliveryMethodID INT NOT NULL,
+        ContactPersonID INT NOT NULL,
+        ExpectedDeliveryDate DATE NULL,
+        SupplierReference NVARCHAR(20) NULL,
+        IsOrderFinalized BIT NOT NULL,
+        Comments NVARCHAR(MAX) NULL,
+        InternalComments NVARCHAR(MAX) NULL,
+        LastEditedBy INT NOT NULL,
+        LastEditedWhen DATETIME2(7) NOT NULL,
+        SucursalID INT NOT NULL DEFAULT (2),
+        CONSTRAINT PK_PurchaseOrdersLimon PRIMARY KEY (PurchaseOrderID)
+    );
+END;
+GO
+
+IF OBJECT_ID(N'Purchasing.PurchaseOrderLinesLimon', N'U') IS NULL
+BEGIN
+    CREATE TABLE Purchasing.PurchaseOrderLinesLimon (
+        PurchaseOrderLineID INT NOT NULL,
+        PurchaseOrderID INT NOT NULL,
+        StockItemID INT NOT NULL,
+        OrderedOuters INT NOT NULL,
+        Description NVARCHAR(100) NOT NULL,
+        ReceivedOuters INT NOT NULL,
+        PackageTypeID INT NOT NULL,
+        ExpectedUnitPricePerOuter DECIMAL(18,2) NULL,
+        LastReceiptDate DATE NULL,
+        IsOrderLineFinalized BIT NOT NULL,
+        LastEditedBy INT NOT NULL,
+        LastEditedWhen DATETIME2(7) NOT NULL,
+        SucursalID INT NOT NULL DEFAULT (2),
+        CONSTRAINT PK_PurchaseOrderLinesLimon PRIMARY KEY (PurchaseOrderLineID),
+        CONSTRAINT FK_PurchaseOrderLinesLimon_PurchaseOrders
+            FOREIGN KEY (PurchaseOrderID)
+            REFERENCES Purchasing.PurchaseOrdersLimon(PurchaseOrderID)
+    );
+END;
+GO
+
+-- ============================================
+-- VERIFICACION DE LAS 8 TABLAS RECEPTORAS
 -- ============================================
 
 SELECT
@@ -169,7 +267,11 @@ WHERE t.name IN (
     'InvoicesSanJose',
     'InvoiceLinesSanJose',
     'InvoicesLimon',
-    'InvoiceLinesLimon'
+    'InvoiceLinesLimon',
+    'PurchaseOrdersSanJose',
+    'PurchaseOrderLinesSanJose',
+    'PurchaseOrdersLimon',
+    'PurchaseOrderLinesLimon'
 )
 GROUP BY s.name, t.name
 ORDER BY s.name, t.name;
