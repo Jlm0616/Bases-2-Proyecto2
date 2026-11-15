@@ -62,18 +62,18 @@ function agregarDatosProducto(peticion, datos) {
   return peticion
     .input('Nombre', sql.NVarChar(100), datos.Nombre)
     .input('ProveedorID', sql.Int, datos.ProveedorID)
-    .input('ColorID', sql.Int, datos.ColorID ?? null)
+    .input('ColorID', sql.Int, datos.ColorID)
     .input('UnidadEmpaqueID', sql.Int, datos.UnidadEmpaqueID)
     .input('EmpaqueExteriorID', sql.Int, datos.EmpaqueExteriorID)
-    .input('Marca', sql.NVarChar(50), datos.Marca ?? null)
-    .input('Tamano', sql.NVarChar(20), datos.Tamano ?? null)
+    .input('Marca', sql.NVarChar(50), datos.Marca)
+    .input('Tamano', sql.NVarChar(20), datos.Tamano)
     .input('DiasEntrega', sql.Int, datos.DiasEntrega)
     .input('CantidadPorEmpaque', sql.Int, datos.CantidadPorEmpaque)
     .input('RequiereRefrigeracion', sql.Bit, datos.RequiereRefrigeracion)
-    .input('CodigoBarras', sql.NVarChar(50), datos.CodigoBarras ?? null)
+    .input('CodigoBarras', sql.NVarChar(50), datos.CodigoBarras)
     .input('Impuesto', sql.Decimal(18, 3), datos.Impuesto)
     .input('PrecioUnitario', sql.Decimal(18, 2), datos.PrecioUnitario)
-    .input('PrecioVenta', sql.Decimal(18, 2), datos.PrecioVenta ?? null)
+    .input('PrecioVenta', sql.Decimal(18, 2), datos.PrecioVenta)
     .input('Peso', sql.Decimal(18, 3), datos.Peso);
 }
 

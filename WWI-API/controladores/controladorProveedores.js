@@ -67,7 +67,7 @@ function agregarDatosGenerales(peticion, datos) {
     .input('SupplierCategoryID', sql.Int, datos.SupplierCategoryID)
     .input('PaymentDays', sql.Int, datos.PaymentDays)
     .input('SupplierReference', sql.NVarChar(20),
-      datos.SupplierReference ?? null);
+      datos.SupplierReference);
 }
 
 /**
@@ -96,23 +96,23 @@ function agregarDatosPrivados(peticion, datos) {
     .input('PostalPostalCode', sql.NVarChar(10),
       datos.PostalPostalCode)
     .input('DeliveryMethodID', sql.Int,
-      datos.DeliveryMethodID ?? null)
+      datos.DeliveryMethodID)
     .input('BankAccountName', sql.NVarChar(50),
-      datos.BankAccountName ?? null)
+      datos.BankAccountName)
     .input('BankAccountBranch', sql.NVarChar(50),
-      datos.BankAccountBranch ?? null)
+      datos.BankAccountBranch)
     .input('BankAccountCode', sql.NVarChar(20),
-      datos.BankAccountCode ?? null)
+      datos.BankAccountCode)
     .input('BankAccountNumber', sql.NVarChar(20),
-      datos.BankAccountNumber ?? null)
+      datos.BankAccountNumber)
     .input('BankInternationalCode', sql.NVarChar(20),
-      datos.BankInternationalCode ?? null)
+      datos.BankInternationalCode)
     .input('InternalComments', sql.NVarChar(sql.MAX),
-      datos.InternalComments ?? null)
+      datos.InternalComments)
     .input('DeliveryAddressLine2', sql.NVarChar(60),
-      datos.DeliveryAddressLine2 ?? null)
+      datos.DeliveryAddressLine2)
     .input('PostalAddressLine2', sql.NVarChar(60),
-      datos.PostalAddressLine2 ?? null);
+      datos.PostalAddressLine2);
 }
 
 /**

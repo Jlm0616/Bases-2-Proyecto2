@@ -247,8 +247,8 @@ async function ejecutarReporte(solicitud, respuesta) {
       reporte: nombre,
       procedimiento: reporte.procedimiento,
       filtros: parametros,
-      total: resultado.recordset?.length ?? 0,
-      datos: resultado.recordset ?? []
+      total: resultado.recordset.length,
+      datos: resultado.recordset
     });
 
   } catch (error) {

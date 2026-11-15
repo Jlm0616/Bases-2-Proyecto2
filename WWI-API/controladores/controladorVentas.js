@@ -141,7 +141,7 @@ async function listarVentas(solicitud, respuesta) {
       'dbo.Vta_sp_ContarVentas'
     );
 
-    const total = conteo.recordset[0]?.Total ?? 0;
+    const total = conteo.recordset[0].Total;
 
     return respuesta.json({
       sucursal: usuario.sucursal,
@@ -194,8 +194,8 @@ async function detalleVenta(solicitud, respuesta) {
       .input('InvoiceID', sql.Int, id)
       .execute('dbo.Vta_sp_DetalleVenta');
 
-    const encabezado = resultado.recordsets?.[0]?.[0];
-    const lineas = resultado.recordsets?.[1] ?? [];
+    const encabezado = resultado.recordsets[0][0];
+    const lineas = resultado.recordsets[1];
 
     if (!encabezado) {
       return respuesta.status(404).json({
@@ -305,7 +305,7 @@ async function crearVenta(solicitud, respuesta) {
         linea.StockItemID,
         linea.Quantity,
         linea.UnitPrice,
-        linea.PackageTypeID ?? null
+        linea.PackageTypeID
       );
     }
 
@@ -315,15 +315,15 @@ async function crearVenta(solicitud, respuesta) {
       .input('SalespersonPersonID', sql.Int, datos.SalespersonPersonID)
       .input('LastEditedBy', sql.Int, usuario.id)
       .input('DeliveryMethodID', sql.Int,
-        datos.DeliveryMethodID ?? 1)
+        datos.DeliveryMethodID)
       .input('AccountsPersonID', sql.Int,
-        datos.AccountsPersonID ?? null)
+        datos.AccountsPersonID)
       .input('PackedByPersonID', sql.Int,
-        datos.PackedByPersonID ?? null)
+        datos.PackedByPersonID)
       .input('CustomerPONumber', sql.NVarChar(20),
-        datos.CustomerPONumber ?? null)
+        datos.CustomerPONumber)
       .input('DeliveryInstructions', sql.NVarChar(100),
-        datos.DeliveryInstructions ?? null)
+        datos.DeliveryInstructions)
       .input('Lineas', lineas)
       .output('NuevoID', sql.Int)
       .execute('dbo.Vta_sp_InsertarVenta');
@@ -331,7 +331,7 @@ async function crearVenta(solicitud, respuesta) {
     return respuesta.status(201).json({
       mensaje: 'Venta creada correctamente',
       ventaID: resultado.output.NuevoID,
-      resultado: resultado.recordset?.[0] ?? null
+      resultado: resultado.recordset[0]
     });
 
   } catch (error) {
@@ -377,16 +377,16 @@ async function actualizarVenta(solicitud, respuesta) {
     const resultado = await conexion.request()
       .input('InvoiceID', sql.Int, id)
       .input('DeliveryInstructions', sql.NVarChar(100),
-        datos.DeliveryInstructions ?? null)
+        datos.DeliveryInstructions)
       .input('CustomerPONumber', sql.NVarChar(20),
-        datos.CustomerPONumber ?? null)
+        datos.CustomerPONumber)
       .input('LastEditedBy', sql.Int, usuario.id)
       .execute('dbo.Vta_sp_ActualizarVenta');
 
     return respuesta.json({
       mensaje: 'Venta actualizada correctamente',
       ventaID: id,
-      resultado: resultado.recordset?.[0] ?? null
+      resultado: resultado.recordset[0]
     });
 
   } catch (error) {
@@ -435,7 +435,7 @@ async function eliminarVenta(solicitud, respuesta) {
     return respuesta.json({
       mensaje: 'Venta eliminada correctamente',
       ventaID: id,
-      resultado: resultado.recordset?.[0] ?? null
+      resultado: resultado.recordset[0]
     });
 
   } catch (error) {
