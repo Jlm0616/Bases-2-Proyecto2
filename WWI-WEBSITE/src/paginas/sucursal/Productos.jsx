@@ -1,11 +1,10 @@
 
-import { useEffect, useState } from 'react';
-import {
-  listarProductos,
-  eliminarProducto
-} from '../../servicios/productos';
+import { useCallback, useEffect, useState } from 'react';
+import { listarProductos } from '../../servicios/productos';
+
 import DetalleProducto from '../../componentes/productos/DetalleProducto';
 import FormularioProducto from '../../componentes/productos/FormularioProducto';
+import ConfirmarEliminar from '../../componentes/productos/ConfirmarEliminar';
 
 import '../../estilos/productos.css';
 
@@ -28,12 +27,12 @@ export default function Productos() {
   const [revision, setRevision] = useState(0);
 
   const [idProductoDetalle, setIdProductoDetalle] = useState(null);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [idProductoEditar, setIdProductoEditar] = useState(null);
-
+  const [formulario, setFormulario] = useState(null);
   const [productoEliminar, setProductoEliminar] = useState(null);
-  const [eliminando, setEliminando] = useState(false);
-  const [errorEliminar, setErrorEliminar] = useState('');
+
+  const actualizarListado = useCallback(() => {
+    setRevision(actual => actual + 1);
+  }, []);
 
   useEffect(() => {
     let activo = true;
@@ -79,7 +78,13 @@ export default function Productos() {
     return () => {
       activo = false;
     };
-  }, [filtroNombre, filtroGrupoID, pagina, tamanoPagina, revision]);
+  }, [
+    filtroNombre,
+    filtroGrupoID,
+    pagina,
+    tamanoPagina,
+    revision
+  ]);
 
   function buscarProductos(evento) {
     evento.preventDefault();
@@ -98,62 +103,29 @@ export default function Productos() {
 
   function abrirCrear() {
     setMensaje('');
-    setIdProductoEditar(null);
-    setMostrarFormulario(true);
+    setFormulario({ idProducto: null });
   }
 
   function abrirEditar(id) {
     setMensaje('');
-    setIdProductoEditar(id);
-    setMostrarFormulario(true);
+    setFormulario({ idProducto: id });
   }
 
-  function cerrarFormulario() {
-    setMostrarFormulario(false);
-    setIdProductoEditar(null);
-  }
-
-  function productoGuardado(texto) {
-    cerrarFormulario();
+  function operacionCompletada(texto) {
+    setFormulario(null);
+    setProductoEliminar(null);
+    setIdProductoDetalle(null);
     setMensaje(texto);
-    setRevision(actual => actual + 1);
+    actualizarListado();
   }
 
   function abrirEliminar(id, nombreProducto) {
     setMensaje('');
-    setErrorEliminar('');
+
     setProductoEliminar({
       id,
       nombre: nombreProducto || `Producto #${id}`
     });
-  }
-
-  function cerrarEliminar() {
-    if (eliminando) return;
-
-    setProductoEliminar(null);
-    setErrorEliminar('');
-  }
-
-  async function confirmarEliminar() {
-    if (!productoEliminar || eliminando) return;
-
-    setEliminando(true);
-    setErrorEliminar('');
-
-    try {
-      await eliminarProducto(productoEliminar.id);
-
-      setProductoEliminar(null);
-      setMensaje('Producto eliminado correctamente');
-      setRevision(actual => actual + 1);
-    } catch (err) {
-      setErrorEliminar(
-        err.message || 'No se pudo eliminar el producto'
-      );
-    } finally {
-      setEliminando(false);
-    }
   }
 
   function generarPaginas() {
@@ -179,7 +151,9 @@ export default function Productos() {
       <header className="productos-encabezado">
         <div>
           <h1>Gestión de productos</h1>
-          <p>Administración del catálogo de productos de la sucursal.</p>
+          <p>
+            Administración del catálogo de productos de la sucursal.
+          </p>
         </div>
 
         <button
@@ -194,6 +168,7 @@ export default function Productos() {
       {mensaje && (
         <div className="productos-exito" role="status">
           <span>{mensaje}</span>
+
           <button
             type="button"
             onClick={() => setMensaje('')}
@@ -210,7 +185,10 @@ export default function Productos() {
           onSubmit={buscarProductos}
         >
           <div className="productos-campo">
-            <label htmlFor="buscar-producto">Nombre</label>
+            <label htmlFor="buscar-producto">
+              Nombre
+            </label>
+
             <input
               id="buscar-producto"
               type="search"
@@ -221,7 +199,10 @@ export default function Productos() {
           </div>
 
           <div className="productos-campo">
-            <label htmlFor="grupo-producto">ID de grupo</label>
+            <label htmlFor="grupo-producto">
+              ID de grupo
+            </label>
+
             <input
               id="grupo-producto"
               type="number"
@@ -337,33 +318,40 @@ export default function Productos() {
                                 )}
                           </td>
 
-                            <td>
+                          <td>
                             <div className="productos-acciones-tabla">
-                                <button
+                              <button
                                 type="button"
                                 className="productos-boton-ver"
-                                onClick={() => setIdProductoDetalle(id)}
-                                >
+                                onClick={() =>
+                                  setIdProductoDetalle(id)
+                                }
+                              >
                                 Ver
-                                </button>
+                              </button>
 
-                                <button
+                              <button
                                 type="button"
                                 className="productos-boton-editar"
                                 onClick={() => abrirEditar(id)}
-                                >
+                              >
                                 Editar
-                                </button>
+                              </button>
 
-                                <button
+                              <button
                                 type="button"
                                 className="productos-boton-eliminar"
-                                onClick={() => abrirEliminar(id, nombreProducto)}
-                                >
+                                onClick={() =>
+                                  abrirEliminar(
+                                    id,
+                                    nombreProducto
+                                  )
+                                }
+                              >
                                 Eliminar
-                                </button>
+                              </button>
                             </div>
-                            </td>
+                          </td>
                         </tr>
                       );
                     })
@@ -399,7 +387,9 @@ export default function Productos() {
                 <button
                   type="button"
                   disabled={pagina <= 1}
-                  onClick={() => setPagina(actual => actual - 1)}
+                  onClick={() =>
+                    setPagina(actual => actual - 1)
+                  }
                   aria-label="Página anterior"
                 >
                   ‹
@@ -423,9 +413,12 @@ export default function Productos() {
                 <button
                   type="button"
                   disabled={
-                    totalPaginas === 0 || pagina >= totalPaginas
+                    totalPaginas === 0 ||
+                    pagina >= totalPaginas
                   }
-                  onClick={() => setPagina(actual => actual + 1)}
+                  onClick={() =>
+                    setPagina(actual => actual + 1)
+                  }
                   aria-label="Página siguiente"
                 >
                   ›
@@ -434,7 +427,8 @@ export default function Productos() {
                 <button
                   type="button"
                   disabled={
-                    totalPaginas === 0 || pagina >= totalPaginas
+                    totalPaginas === 0 ||
+                    pagina >= totalPaginas
                   }
                   onClick={() => setPagina(totalPaginas)}
                   aria-label="Última página"
@@ -452,7 +446,9 @@ export default function Productos() {
                   id="tamano-productos"
                   value={tamanoPagina}
                   onChange={evento => {
-                    setTamanoPagina(Number(evento.target.value));
+                    setTamanoPagina(
+                      Number(evento.target.value)
+                    );
                     setPagina(1);
                   }}
                 >
@@ -466,11 +462,11 @@ export default function Productos() {
         )}
       </section>
 
-      {mostrarFormulario && (
+      {formulario !== null && (
         <FormularioProducto
-          productoId={idProductoEditar}
-          alCerrar={cerrarFormulario}
-          alGuardar={productoGuardado}
+          productoId={formulario.idProducto}
+          alCerrar={() => setFormulario(null)}
+          alGuardar={operacionCompletada}
         />
       )}
 
@@ -482,87 +478,11 @@ export default function Productos() {
       )}
 
       {productoEliminar !== null && (
-        <div
-          className="productos-modal-fondo"
-          onMouseDown={evento => {
-            if (evento.target === evento.currentTarget) {
-              cerrarEliminar();
-            }
-          }}
-        >
-          <section
-            className="productos-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-eliminar-producto"
-            style={{ maxWidth: '480px' }}
-          >
-            <header className="productos-modal-encabezado">
-              <div>
-                <h2 id="titulo-eliminar-producto">
-                  Eliminar producto
-                </h2>
-                <p>Confirmación de eliminación</p>
-              </div>
-
-              <button
-                type="button"
-                className="productos-modal-cerrar"
-                onClick={cerrarEliminar}
-                disabled={eliminando}
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
-            </header>
-
-            <div className="productos-modal-contenido">
-              <p>
-                ¿Estás seguro de que querés eliminar el producto
-                <strong> {productoEliminar.nombre}</strong>
-                {' '} (ID: {productoEliminar.id})?
-              </p>
-
-              <p style={{ color: '#64748b', fontSize: '13px' }}>
-                Esta operación puede afectar el catálogo de productos.
-                Si el producto tiene registros relacionados, la base
-                de datos podría impedir su eliminación.
-              </p>
-
-              {errorEliminar && (
-                <p className="productos-error" role="alert">
-                  {errorEliminar}
-                </p>
-              )}
-            </div>
-
-            <footer
-              className="productos-modal-pie"
-              style={{ gap: '12px' }}
-            >
-              <button
-                type="button"
-                className="productos-boton-secundario"
-                onClick={cerrarEliminar}
-                disabled={eliminando}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                className="productos-boton-principal"
-                style={{ backgroundColor: '#b91c1c' }}
-                onClick={confirmarEliminar}
-                disabled={eliminando}
-              >
-                {eliminando
-                  ? 'Eliminando...'
-                  : 'Sí, eliminar'}
-              </button>
-            </footer>
-          </section>
-        </div>
+        <ConfirmarEliminar
+          producto={productoEliminar}
+          alCerrar={() => setProductoEliminar(null)}
+          alEliminar={operacionCompletada}
+        />
       )}
     </div>
   );

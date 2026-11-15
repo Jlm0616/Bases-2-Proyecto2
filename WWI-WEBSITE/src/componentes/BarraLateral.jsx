@@ -21,6 +21,7 @@ export default function BarraLateral({
     : [
         { id: 'inicio', nombre: 'Inicio', icono: '⌂' },
         { id: 'clientes', nombre: 'Clientes', icono: '♙' },
+        { id: 'proveedores', nombre: 'Proveedores', icono: '▣' },
         { id: 'productos', nombre: 'Productos', icono: '▣' },
         { id: 'ventas', nombre: 'Ventas', icono: '▤' },
         { id: 'reportes', nombre: 'Reportes', icono: '▥' }

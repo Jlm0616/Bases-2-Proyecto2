@@ -37,36 +37,61 @@ BEGIN
     SELECT
         SI.StockItemID AS IdProducto,
         SI.StockItemName AS NombreProducto,
+
+        -- Datos del proveedor y precio
+        MAX(PR.SupplierName) AS NombreProveedor,
+        SI.UnitPrice AS PrecioUnitario,
+
+        -- Grupos del producto
         STRING_AGG(
             CONVERT(NVARCHAR(MAX), SG.StockGroupName),
             N', '
         ) WITHIN GROUP (
             ORDER BY SG.StockGroupName
         ) AS GrupoProducto,
+
+        -- Existencias locales
         MAX(H.QuantityOnHand) AS CantidadEnInventario
+
     FROM dbo.Inv_Articulos AS SI
+
+    LEFT JOIN dbo.Prov_Proveedores AS PR
+        ON PR.SupplierID = SI.SupplierID
+
     LEFT JOIN dbo.Inv_ArticuloGrupo AS AG
         ON AG.StockItemID = SI.StockItemID
+
     LEFT JOIN dbo.Inv_GruposArticulo AS SG
         ON SG.StockGroupID = AG.StockGroupID
+
     LEFT JOIN dbo.Inv_ExistenciasArticulo AS H
         ON H.StockItemID = SI.StockItemID
+
     WHERE
-        (@Nombre IS NULL
-         OR SI.StockItemName LIKE N'%' + @Nombre + N'%')
+        (
+            @Nombre IS NULL
+            OR SI.StockItemName LIKE N'%' + @Nombre + N'%'
+        )
         AND
-        (@GrupoID IS NULL OR EXISTS (
-            SELECT 1
-            FROM dbo.Inv_ArticuloGrupo AS AG2
-            WHERE AG2.StockItemID = SI.StockItemID
-              AND AG2.StockGroupID = @GrupoID
-        ))
+        (
+            @GrupoID IS NULL
+            OR EXISTS (
+                SELECT 1
+                FROM dbo.Inv_ArticuloGrupo AS AG2
+                WHERE AG2.StockItemID = SI.StockItemID
+                  AND AG2.StockGroupID = @GrupoID
+            )
+        )
+
     GROUP BY
         SI.StockItemID,
-        SI.StockItemName
+        SI.StockItemName,
+        SI.UnitPrice
+
     ORDER BY
         SI.StockItemName ASC,
         SI.StockItemID ASC
+
     OFFSET @Offset ROWS
     FETCH NEXT @PageSize ROWS ONLY;
 END;

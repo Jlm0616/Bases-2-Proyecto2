@@ -7,6 +7,7 @@ import BarraLateral from '../../componentes/BarraLateral';
 
 import Clientes from './Clientes';
 import Productos from './Productos';
+import Proveedores from './Proveedores';
 
 import '../../estilos/estructuraPanel.css';
 
@@ -29,6 +30,9 @@ export default function InicioSucursal() {
 
       case 'productos':
         return <Productos />;
+
+      case 'proveedores':
+        return <Proveedores />;
 
       case 'inicio':
         return (
