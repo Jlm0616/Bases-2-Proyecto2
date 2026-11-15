@@ -1,3 +1,4 @@
+
 const {
   sql,
   conectarSanJose,
@@ -446,10 +447,74 @@ async function eliminarVenta(solicitud, respuesta) {
   }
 }
 
+/**
+ * Catálogos auxiliares para el formulario de ventas.
+ * Solo los usuarios de sucursal consultan estos datos.
+ * La conexión se determina a partir de la sesión.
+ */
+const FILTROS_VENTAS = Object.freeze({
+  clientes: 'Flt_sp_ListarClientes',
+  personas: 'Flt_sp_ListarPersonas',
+  vendedores: 'Flt_sp_ListarVendedores',
+  'metodos-entrega': 'Flt_sp_ListarMetodosEntrega',
+  productos: 'Flt_sp_ListarProductos',
+  'tipos-empaque': 'Flt_sp_ListarTiposEmpaque'
+});
+
+/**
+ * Consulta uno de los seis catálogos de Ventas.
+ */
+async function listarFiltrosVenta(solicitud, respuesta) {
+  try {
+    const usuario = solicitud.session?.usuario;
+
+    if (!usuario) {
+      return respuesta.status(401).json({
+        mensaje: 'Debe iniciar sesión'
+      });
+    }
+
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden consultar estos filtros'
+      });
+    }
+
+    const filtro = solicitud.params.tipo;
+
+    if (!Object.prototype.hasOwnProperty.call(FILTROS_VENTAS, filtro)) {
+      return respuesta.status(404).json({
+        mensaje: 'Filtro de ventas no encontrado'
+      });
+    }
+
+    const conexion = await obtenerConexion(usuario.sucursal);
+
+    const resultado = await conexion.request().execute(
+      'dbo.' + FILTROS_VENTAS[filtro]
+    );
+
+    return respuesta.json({
+      sucursal: usuario.sucursal,
+      filtro,
+      datos: resultado.recordset || []
+    });
+
+  } catch (error) {
+    console.error('Error al consultar filtros de ventas:', error);
+
+    return respuesta.status(500).json({
+      mensaje: 'No se pudieron obtener los filtros de ventas'
+    });
+  }
+}
+
 module.exports = {
   listarVentas,
   detalleVenta,
   crearVenta,
   actualizarVenta,
-  eliminarVenta
+  eliminarVenta,
+  listarFiltrosVenta
 };

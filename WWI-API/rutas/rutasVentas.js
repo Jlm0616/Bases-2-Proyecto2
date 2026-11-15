@@ -1,3 +1,4 @@
+
 const express = require('express');
 
 /**
@@ -15,11 +16,23 @@ const {
   detalleVenta,
   crearVenta,
   actualizarVenta,
-  eliminarVenta
+  eliminarVenta,
+  listarFiltrosVenta
 } = require('../controladores/controladorVentas');
 
 // GET /api/ventas - Listar ventas (todos los roles)
 router.get('/', verificarSesion, listarVentas);
+
+// GET /api/ventas/filtros/:tipo - Catálogos auxiliares para ventas
+// Tipos disponibles:
+// clientes, personas, vendedores, metodos-entrega,
+// productos, tipos-empaque
+// El controlador restringe el acceso a SanJosé y Limón.
+router.get(
+  '/filtros/:tipo',
+  verificarSesion,
+  listarFiltrosVenta
+);
 
 // GET /api/ventas/:id - Detalle de factura (todos los roles)
 router.get('/:id', verificarSesion, detalleVenta);
