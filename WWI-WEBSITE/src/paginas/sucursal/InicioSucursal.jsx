@@ -4,7 +4,9 @@ import { ContextoAutenticacion } from '../../contextos/ContextoAutenticacion';
 
 import BarraSuperior from '../../componentes/BarraSuperior';
 import BarraLateral from '../../componentes/BarraLateral';
+
 import Clientes from './Clientes';
+import Productos from './Productos';
 
 import '../../estilos/estructuraPanel.css';
 
@@ -24,6 +26,9 @@ export default function InicioSucursal() {
     switch (seccionActiva) {
       case 'clientes':
         return <Clientes />;
+
+      case 'productos':
+        return <Productos />;
 
       case 'inicio':
         return (
