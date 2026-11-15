@@ -1,0 +1,112 @@
+
+@import './variables.css';
+
+.barra-lateral {
+  width: 250px;
+  min-width: 250px;
+  min-height: calc(100vh - 76px);
+  background: var(--gris-carbon);
+  color: var(--crema);
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid var(--verde-oliva);
+}
+
+.barra-lateral-encabezado {
+  padding: 28px 22px;
+  border-bottom: 1px solid #596159;
+}
+
+.barra-lateral-etiqueta {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #B9C4B2;
+}
+
+.barra-lateral-encabezado h2 {
+  margin: 10px 0 4px;
+  font-size: 21px;
+  color: var(--crema);
+}
+
+.barra-lateral-encabezado p {
+  margin: 0;
+  font-size: 13px;
+  color: #B9C4B2;
+}
+
+.barra-lateral-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 12px;
+  flex: 1;
+}
+
+.barra-lateral-opcion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: transparent;
+  color: var(--crema);
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.barra-lateral-opcion:hover {
+  background: #465047;
+}
+
+.barra-lateral-opcion.activa {
+  background: var(--verde-oliva);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.barra-lateral-opcion:focus-visible {
+  outline: 2px solid var(--crema);
+  outline-offset: 2px;
+}
+
+.barra-lateral-icono {
+  width: 20px;
+  font-size: 19px;
+  text-align: center;
+}
+
+.barra-lateral-pie {
+  padding: 20px;
+  border-top: 1px solid #596159;
+  font-size: 12px;
+  text-align: center;
+  color: #B9C4B2;
+}
+
+@media (max-width: 768px) {
+  .barra-lateral {
+    width: 100%;
+    min-width: 0;
+    min-height: auto;
+  }
+
+  .barra-lateral-menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .barra-lateral-opcion {
+    width: auto;
+  }
+
+  .barra-lateral-pie {
+    display: none;
+  }
+}

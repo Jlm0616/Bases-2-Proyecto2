@@ -1,0 +1,136 @@
+
+@import './variables.css';
+
+.login-contenedor {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: linear-gradient(
+    135deg,
+    var(--gris-carbon) 0%,
+    var(--verde-bosque) 60%,
+    var(--verde-oliva) 100%
+  );
+  font-family: Arial, sans-serif;
+}
+
+.login-tarjeta {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: var(--crema-claro);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.login-encabezado {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--verde-bosque);
+  color: var(--crema);
+  border: 1px solid var(--verde-oliva);
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.login-encabezado h1 {
+  color: var(--verde-bosque);
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.login-encabezado p {
+  color: var(--gris-texto);
+  font-size: 14px;
+}
+
+.login-campo {
+  margin-bottom: 20px;
+}
+
+.login-campo label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gris-carbon);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.login-campo input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--blanco);
+  color: var(--gris-carbon);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-campo input:focus {
+  border-color: var(--verde-oliva);
+  box-shadow: 0 0 0 3px rgba(70, 86, 59, 0.15);
+}
+
+.login-error {
+  padding: 12px;
+  margin-bottom: 16px;
+  background: var(--error-fondo);
+  color: var(--error-texto);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.login-boton {
+  width: 100%;
+  padding: 14px;
+  background: var(--verde-bosque);
+  color: var(--crema-claro);
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.login-boton:hover:not(:disabled) {
+  background: var(--verde-hover);
+}
+
+.login-boton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.login-pie {
+  margin-top: 30px;
+  text-align: center;
+  color: var(--gris-texto);
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .login-tarjeta {
+    padding: 28px 22px;
+  }
+
+  .login-encabezado h1 {
+    font-size: 22px;
+  }
+}

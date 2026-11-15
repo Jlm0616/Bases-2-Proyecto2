@@ -1,0 +1,28 @@
+
+:root {
+  /* Paleta principal */
+  --verde-bosque: #172F26;
+  --verde-oliva: #46563B;
+  --verde-hover: #34452E;
+
+  /* Escala de grises */
+  --gris-carbon: #343936;
+  --gris-acero: #A6AAA3;
+  --gris-texto: #566257;
+
+  /* Fondos */
+  --fondo-principal: #7c867f;
+  --fondo-tarjeta: #E4E8E4;
+
+  /* Colores claros */
+  --crema: #F0EBDD;
+  --crema-claro: #FFFCF5;
+  --blanco: #FFFFFF;
+
+  /* Bordes */
+  --borde: #B7BFB8;
+
+  /* Estados */
+  --error-fondo: #FCEBE8;
+  --error-texto: #A83232;
+}

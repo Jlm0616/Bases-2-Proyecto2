@@ -1,0 +1,59 @@
+
+@import './variables.css';
+
+.panel-contenedor {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fondo-principal);
+}
+
+.panel-cuerpo {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel-contenido {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+  background: var(--fondo-principal);
+  color: var(--gris-carbon);
+}
+
+.panel-contenido h1 {
+  margin: 0 0 12px;
+  color: var(--verde-bosque);
+}
+
+.panel-contenido h2 {
+  color: var(--verde-bosque);
+}
+
+.panel-contenido > p {
+  color: var(--gris-carbon);
+}
+
+.panel-tarjeta {
+  margin-top: 28px;
+  padding: 24px;
+  background: var(--fondo-tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(23, 47, 38, 0.06);
+}
+
+.panel-tarjeta h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .panel-cuerpo {
+    flex-direction: column;
+  }
+
+  .panel-contenido {
+    padding: 20px;
+  }
+}

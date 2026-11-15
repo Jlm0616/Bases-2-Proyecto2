@@ -1,0 +1,103 @@
+
+@import './variables.css';
+
+.barra-superior {
+  min-height: 76px;
+  padding: 16px 32px;
+  background: var(--verde-bosque);
+  border-bottom: 2px solid var(--verde-oliva);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.barra-superior-identidad {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.barra-superior-marca {
+  background: var(--verde-oliva);
+  color: var(--crema-claro);
+  padding: 10px;
+  border: 1px solid var(--gris-acero);
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.barra-superior-sistema {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--crema);
+}
+
+.barra-superior-usuario {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.barra-superior-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.barra-superior-datos strong {
+  color: var(--crema-claro);
+  font-size: 14px;
+}
+
+.barra-superior-datos span {
+  color: #C8D0C1;
+  font-size: 12px;
+}
+
+.barra-superior-salir {
+  padding: 10px 16px;
+  background: var(--crema);
+  color: var(--verde-bosque);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.barra-superior-salir:hover:not(:disabled) {
+  background: #DDD7C7;
+}
+
+.barra-superior-salir:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.barra-superior-error {
+  width: 100%;
+  margin: 0;
+  color: #FFD5D5;
+  font-size: 13px;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .barra-superior {
+    padding: 16px;
+  }
+
+  .barra-superior-usuario {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .barra-superior-datos {
+    text-align: left;
+  }
+}
