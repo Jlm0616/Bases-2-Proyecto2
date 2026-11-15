@@ -202,3 +202,59 @@ BEGIN
     OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
+
+-- =============================================
+-- 06. CREAR SECUENCIA PARA IDs DE PRODUCTOS
+-- =============================================
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.sequences
+    WHERE name = 'Seq_StockItemID'
+      AND schema_id = SCHEMA_ID('dbo')
+)
+BEGIN
+    DECLARE @SiguienteID INT;
+
+    -- Obtener el siguiente ID disponible
+    SELECT @SiguienteID =
+        ISNULL(MAX(StockItemID), 0) + 1
+    FROM Warehouse.StockItems;
+
+    -- Crear secuencia dinámicamente
+    DECLARE @SQL NVARCHAR(MAX);
+
+    SET @SQL = N'
+        CREATE SEQUENCE dbo.Seq_StockItemID
+        AS INT
+        START WITH ' + CAST(@SiguienteID AS NVARCHAR(20)) + N'
+        INCREMENT BY 1
+        NO CYCLE;
+    ';
+
+    EXEC sp_executesql @SQL;
+
+    PRINT 'Secuencia Seq_StockItemID creada correctamente.';
+END
+ELSE
+BEGIN
+    PRINT 'La secuencia Seq_StockItemID ya existe.';
+END;
+GO
+
+-- =============================================
+-- 07. CREAR PROCEDIMIENTO GENERADOR DE IDs
+-- =============================================
+
+CREATE OR ALTER PROCEDURE dbo.Inv_sp_GenerarStockItemID
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StockItemID INT;
+
+    SET @StockItemID = NEXT VALUE FOR dbo.Seq_StockItemID;
+
+    SELECT @StockItemID AS StockItemID;
+END;
+GO

@@ -7,10 +7,17 @@ const {
 
 const {
   listarVentas,
-  detalleVenta
+  detalleVenta,
+  crearVenta,
+  actualizarVenta,
+  eliminarVenta
 } = require('../controladores/controladorVentas');
 
 router.get('/', verificarSesion, listarVentas);
 router.get('/:id', verificarSesion, detalleVenta);
+
+router.post('/', verificarSesion, crearVenta);
+router.put('/:id', verificarSesion, actualizarVenta);
+router.delete('/:id', verificarSesion, eliminarVenta);
 
 module.exports = router;
