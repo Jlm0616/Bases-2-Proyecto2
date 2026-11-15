@@ -1,4 +1,10 @@
 
+/**
+ * Middleware para verificar que el usuario tenga una sesión activa
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * @param {import('express').NextFunction} siguiente - Función para pasar al siguiente middleware
+ */
 function verificarSesion(solicitud, respuesta, siguiente) {
   if (solicitud.session == null) {
     return respuesta.status(401).json({
@@ -15,6 +21,12 @@ function verificarSesion(solicitud, respuesta, siguiente) {
   siguiente();
 }
 
+/**
+ * Middleware para verificar que el usuario sea Administrador de una sucursal (SanJosé o Limón)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * @param {import('express').NextFunction} siguiente - Función para pasar al siguiente middleware
+ */
 function verificarAdministrador(solicitud, respuesta, siguiente) {
   if (solicitud.session == null || solicitud.session.usuario == null) {
     return respuesta.status(401).json({
@@ -39,6 +51,12 @@ function verificarAdministrador(solicitud, respuesta, siguiente) {
   siguiente();
 }
 
+/**
+ * Middleware para verificar que el usuario sea de rol Corporativo y esté en la sucursal Corporativo
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * @param {import('express').NextFunction} siguiente - Función para pasar al siguiente middleware
+ */
 function verificarCorporativo(solicitud, respuesta, siguiente) {
   if (solicitud.session == null || solicitud.session.usuario == null) {
     return respuesta.status(401).json({

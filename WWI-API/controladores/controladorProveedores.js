@@ -5,16 +5,31 @@ const {
   conectarCorporativo
 } = require('../config/db');
 
+/**
+ * Conecta a la base de datos de la sucursal especificada
+ * @param {string} sucursal - Nombre de la sucursal ('SanJose' o 'Limon')
+ * @returns {Promise<sql.ConnectionPool|null>} Pool de conexión o null si la sucursal no es válida
+ */
 async function conectarSucursal(sucursal) {
   if (sucursal === 'SanJose') return conectarSanJose();
   if (sucursal === 'Limon') return conectarLimon();
   return null;
 }
 
+/**
+ * Valida que un ID sea un entero positivo válido
+ * @param {number} id - ID a validar
+ * @returns {boolean} true si el ID es válido
+ */
 function idValido(id) {
   return Number.isInteger(id) && id > 0 && id <= 2147483647;
 }
 
+/**
+ * Valida que los datos de un proveedor contengan los campos obligatorios
+ * @param {Object} datos - Datos del proveedor a validar
+ * @returns {string[]} Array con los nombres de los campos faltantes
+ */
 function validarProveedor(datos) {
   const campos = [
     'SupplierName',
@@ -40,6 +55,12 @@ function validarProveedor(datos) {
   );
 }
 
+/**
+ * Agrega los datos generales del proveedor a una petición SQL
+ * @param {sql.Request} peticion - Petición SQL
+ * @param {Object} datos - Datos del proveedor
+ * @returns {sql.Request} Petición SQL con los parámetros agregados
+ */
 function agregarDatosGenerales(peticion, datos) {
   return peticion
     .input('SupplierName', sql.NVarChar(100), datos.SupplierName)
@@ -49,6 +70,12 @@ function agregarDatosGenerales(peticion, datos) {
       datos.SupplierReference ?? null);
 }
 
+/**
+ * Agrega los datos privados del proveedor a una petición SQL
+ * @param {sql.Request} peticion - Petición SQL
+ * @param {Object} datos - Datos del proveedor
+ * @returns {sql.Request} Petición SQL con los parámetros agregados
+ */
 function agregarDatosPrivados(peticion, datos) {
   return peticion
     .input('PrimaryContactPersonID', sql.Int,
@@ -88,6 +115,11 @@ function agregarDatosPrivados(peticion, datos) {
       datos.PostalAddressLine2 ?? null);
 }
 
+/**
+ * Lista proveedores paginados con filtros opcionales
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function listarProveedores(solicitud, respuesta) {
   try {
     const sucursal = solicitud.session.usuario.sucursal;
@@ -143,6 +175,11 @@ async function listarProveedores(solicitud, respuesta) {
   }
 }
 
+/**
+ * Obtiene el detalle completo de un proveedor (datos públicos y privados)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function obtenerDetalleProveedor(solicitud, respuesta) {
   try {
     const id = Number(solicitud.params.id);
@@ -194,6 +231,11 @@ async function obtenerDetalleProveedor(solicitud, respuesta) {
   }
 }
 
+/**
+ * Crea un nuevo proveedor con datos generales en la sucursal y datos privados en Corporativo
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function crearProveedor(solicitud, respuesta) {
   let supplierID = null;
   let generalCreado = false;
@@ -285,6 +327,11 @@ async function crearProveedor(solicitud, respuesta) {
   }
 }
 
+/**
+ * Actualiza un proveedor existente (datos generales y privados)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function actualizarProveedor(solicitud, respuesta) {
   let generalActualizado = false;
 
@@ -351,6 +398,11 @@ async function actualizarProveedor(solicitud, respuesta) {
   }
 }
 
+/**
+ * Elimina un proveedor (datos generales en la sucursal y datos privados en Corporativo)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function eliminarProveedor(solicitud, respuesta) {
   let generalEliminado = false;
 

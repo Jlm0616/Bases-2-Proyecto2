@@ -5,6 +5,11 @@ const {
   conectarCorporativo
 } = require('../config/db');
 
+/**
+ * Conecta a la base de datos de la sucursal especificada
+ * @param {string} sucursal - Nombre de la sucursal ('SanJose' o 'Limon')
+ * @returns {Promise<sql.ConnectionPool|null>} Pool de conexión o null si la sucursal no es válida
+ */
 async function conectarSucursal(sucursal) {
   if (sucursal === 'SanJose') {
     return conectarSanJose();
@@ -17,10 +22,20 @@ async function conectarSucursal(sucursal) {
   return null;
 }
 
+/**
+ * Valida que un ID sea un entero positivo válido
+ * @param {number} id - ID a validar
+ * @returns {boolean} true si el ID es válido
+ */
 function idValido(id) {
   return Number.isInteger(id) && id > 0 && id <= 2147483647;
 }
 
+/**
+ * Lista clientes paginados con filtros opcionales
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function listarClientes(solicitud, respuesta) {
   try {
     const sucursal = solicitud.session.usuario.sucursal;
@@ -83,6 +98,11 @@ async function listarClientes(solicitud, respuesta) {
   }
 }
 
+/**
+ * Obtiene el detalle completo de un cliente (datos públicos y privados)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function obtenerDetalleCliente(solicitud, respuesta) {
   try {
     const idCliente = Number(solicitud.params.id);
@@ -141,6 +161,11 @@ async function obtenerDetalleCliente(solicitud, respuesta) {
   }
 }
 
+/**
+ * Crea un nuevo cliente con datos públicos en la sucursal y datos privados en Corporativo
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function crearCliente(solicitud, respuesta) {
   let idCliente = null;
   let publicoInsertado = false;
@@ -226,6 +251,11 @@ async function crearCliente(solicitud, respuesta) {
   }
 }
 
+/**
+ * Actualiza un cliente existente (datos públicos y privados)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function actualizarCliente(solicitud, respuesta) {
   try {
     const idCliente = Number(solicitud.params.id);
@@ -300,6 +330,11 @@ async function actualizarCliente(solicitud, respuesta) {
   }
 }
 
+/**
+ * Elimina un cliente (datos privados en Corporativo y datos públicos en la sucursal)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function eliminarCliente(solicitud, respuesta) {
   try {
     const idCliente = Number(solicitud.params.id);

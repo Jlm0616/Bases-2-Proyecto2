@@ -1,7 +1,11 @@
 
 const { sql, conectarCorporativo } = require('../config/db');
 
-// Iniciar sesión
+/**
+ * Inicia sesión de usuario en el sistema
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function iniciarSesion(solicitud, respuesta) {
   try {
     const usuario = solicitud.body.usuario;
@@ -98,7 +102,11 @@ async function iniciarSesion(solicitud, respuesta) {
   }
 }
 
-// Consultar sesión actual
+/**
+ * Consulta la sesión actual del usuario
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 function obtenerSesion(solicitud, respuesta) {
   if (solicitud.session == null || solicitud.session.usuario == null) {
     return respuesta.status(401).json({
@@ -111,7 +119,11 @@ function obtenerSesion(solicitud, respuesta) {
   });
 }
 
-// Cerrar sesión
+/**
+ * Cierra la sesión del usuario
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 function cerrarSesion(solicitud, respuesta) {
   if (solicitud.session == null) {
     return respuesta.status(401).json({

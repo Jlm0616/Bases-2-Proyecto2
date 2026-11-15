@@ -1,4 +1,9 @@
 const express = require('express');
+
+/**
+ * Enrutador para endpoints de proveedores
+ * @type {express.Router}
+ */
 const router = express.Router();
 
 const {
@@ -14,10 +19,13 @@ const {
   eliminarProveedor
 } = require('../controladores/controladorProveedores');
 
+// GET /api/proveedores - Listar proveedores (todos los roles)
 router.get('/', verificarSesion, listarProveedores);
 
+// GET /api/proveedores/:id - Detalle de proveedor (todos los roles)
 router.get('/:id', verificarSesion, obtenerDetalleProveedor);
 
+// POST /api/proveedores - Crear proveedor (solo Administradores de sucursales)
 router.post(
   '/',
   verificarSesion,
@@ -25,6 +33,7 @@ router.post(
   crearProveedor
 );
 
+// PUT /api/proveedores/:id - Actualizar proveedor (solo Administradores de sucursales)
 router.put(
   '/:id',
   verificarSesion,
@@ -32,6 +41,7 @@ router.put(
   actualizarProveedor
 );
 
+// DELETE /api/proveedores/:id - Eliminar proveedor (solo Administradores de sucursales)
 router.delete(
   '/:id',
   verificarSesion,

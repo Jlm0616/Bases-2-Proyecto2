@@ -5,6 +5,11 @@ const {
   conectarCorporativo
 } = require('../config/db');
 
+/**
+ * Conecta a la base de datos según la sucursal especificada
+ * @param {string} sucursal - Nombre de la sucursal ('SanJose', 'Limon' o 'Corporativo')
+ * @returns {Promise<sql.ConnectionPool|null>} Pool de conexión o null si la sucursal no es válida
+ */
 async function obtenerConexion(sucursal) {
   if (sucursal === 'SanJose') return conectarSanJose();
   if (sucursal === 'Limon') return conectarLimon();
@@ -12,10 +17,20 @@ async function obtenerConexion(sucursal) {
   return null;
 }
 
+/**
+ * Valida que un ID sea un entero positivo válido
+ * @param {number} id - ID a validar
+ * @returns {boolean} true si el ID es válido
+ */
 function idValido(id) {
   return Number.isInteger(id) && id > 0 && id <= 2147483647;
 }
 
+/**
+ * Valida que los datos de un producto contengan los campos obligatorios
+ * @param {Object} datos - Datos del producto a validar
+ * @returns {string[]} Array con los nombres de los campos faltantes
+ */
 function validarProducto(datos) {
   const campos = [
     'Nombre',
@@ -37,6 +52,12 @@ function validarProducto(datos) {
   );
 }
 
+/**
+ * Agrega los datos del producto a una petición SQL
+ * @param {sql.Request} peticion - Petición SQL
+ * @param {Object} datos - Datos del producto
+ * @returns {sql.Request} Petición SQL con los parámetros agregados
+ */
 function agregarDatosProducto(peticion, datos) {
   return peticion
     .input('Nombre', sql.NVarChar(100), datos.Nombre)
@@ -56,6 +77,11 @@ function agregarDatosProducto(peticion, datos) {
     .input('Peso', sql.Decimal(18, 3), datos.Peso);
 }
 
+/**
+ * Lista productos paginados con filtros opcionales
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function listarProductos(solicitud, respuesta) {
   try {
     const sucursal = solicitud.session.usuario.sucursal;
@@ -109,6 +135,11 @@ async function listarProductos(solicitud, respuesta) {
   }
 }
 
+/**
+ * Obtiene el detalle de un producto
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function detalleProducto(solicitud, respuesta) {
   try {
     const id = Number(solicitud.params.id);
@@ -150,6 +181,11 @@ async function detalleProducto(solicitud, respuesta) {
   }
 }
 
+/**
+ * Consulta el inventario de una sucursal específica
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function inventarioPorSucursal(solicitud, respuesta) {
   try {
     const sucursalUsuario = solicitud.session.usuario.sucursal;
@@ -200,6 +236,11 @@ async function inventarioPorSucursal(solicitud, respuesta) {
   }
 }
 
+/**
+ * Consulta el inventario consolidado de todas las sucursales
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function inventarioConsolidado(solicitud, respuesta) {
   try {
     const pagina = Number(solicitud.query.pagina || 1);
@@ -232,6 +273,11 @@ async function inventarioConsolidado(solicitud, respuesta) {
   }
 }
 
+/**
+ * Crea un nuevo producto en la sucursal del usuario
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function crearProducto(solicitud, respuesta) {
   try {
     const usuario = solicitud.session.usuario;
@@ -281,6 +327,11 @@ async function crearProducto(solicitud, respuesta) {
   }
 }
 
+/**
+ * Actualiza un producto existente
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function actualizarProducto(solicitud, respuesta) {
   try {
     const usuario = solicitud.session.usuario;
@@ -330,6 +381,11 @@ async function actualizarProducto(solicitud, respuesta) {
   }
 }
 
+/**
+ * Elimina un producto
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function eliminarProducto(solicitud, respuesta) {
   try {
     const usuario = solicitud.session.usuario;

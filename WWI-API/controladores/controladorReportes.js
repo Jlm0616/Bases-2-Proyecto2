@@ -1,5 +1,9 @@
 const { sql, conectarCorporativo } = require('../config/db');
 
+/**
+ * Configuración de los 10 reportes disponibles en Corporativo
+ * Cada reporte especifica su procedimiento almacenado y filtros permitidos
+ */
 const reportes = {
   'montos-proveedores': {
     procedimiento: 'dbo.Rpt_sp_MontosProveedores',
@@ -86,6 +90,11 @@ const reportes = {
   }
 };
 
+/**
+ * Verifica que el usuario tenga rol Corporativo y esté en la sucursal Corporativo
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @returns {boolean} true si el usuario es Corporativo
+ */
 function usuarioCorporativo(solicitud) {
   const usuario = solicitud.session?.usuario;
 
@@ -94,6 +103,11 @@ function usuarioCorporativo(solicitud) {
     usuario.sucursal === 'Corporativo';
 }
 
+/**
+ * Lista los reportes disponibles con sus filtros
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 function listarReportes(solicitud, respuesta) {
   if (!solicitud.session?.usuario) {
     return respuesta.status(401).json({
@@ -122,6 +136,11 @@ function listarReportes(solicitud, respuesta) {
   });
 }
 
+/**
+ * Ejecuta un reporte específico con los filtros proporcionados
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function ejecutarReporte(solicitud, respuesta) {
   try {
     if (!solicitud.session?.usuario) {

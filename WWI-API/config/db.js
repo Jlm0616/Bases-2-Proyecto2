@@ -3,7 +3,9 @@ require('dotenv').config();
 
 const sql = require('mssql');
 
-// Configuración San José
+/**
+ * Configuración de conexión para la base de datos de San José
+ */
 const configuracionSanJose = {
   server: process.env.DB_SJ_SERVER,
   port: Number(process.env.DB_SJ_PORT),
@@ -16,7 +18,9 @@ const configuracionSanJose = {
   }
 };
 
-// Configuración Limón
+/**
+ * Configuración de conexión para la base de datos de Limón
+ */
 const configuracionLimon = {
   server: process.env.DB_LIM_SERVER,
   port: Number(process.env.DB_LIM_PORT),
@@ -29,7 +33,9 @@ const configuracionLimon = {
   }
 };
 
-// Configuración Corporativo
+/**
+ * Configuración de conexión para la base de datos Corporativo
+ */
 const configuracionCorporativo = {
   server: process.env.DB_CORP_SERVER,
   port: Number(process.env.DB_CORP_PORT),
@@ -42,12 +48,17 @@ const configuracionCorporativo = {
   }
 };
 
-// Pools de conexión
+/**
+ * Pools de conexión para las tres bases de datos
+ */
 const poolSanJose = new sql.ConnectionPool(configuracionSanJose);
 const poolLimon = new sql.ConnectionPool(configuracionLimon);
 const poolCorporativo = new sql.ConnectionPool(configuracionCorporativo);
 
-// Conectar San José
+/**
+ * Conecta a la base de datos de San José
+ * @returns {Promise<sql.ConnectionPool>} Pool de conexión a San José
+ */
 async function conectarSanJose() {
   if (!poolSanJose.connected) {
     await poolSanJose.connect();
@@ -56,7 +67,10 @@ async function conectarSanJose() {
   return poolSanJose;
 }
 
-// Conectar Limón
+/**
+ * Conecta a la base de datos de Limón
+ * @returns {Promise<sql.ConnectionPool>} Pool de conexión a Limón
+ */
 async function conectarLimon() {
   if (!poolLimon.connected) {
     await poolLimon.connect();
@@ -65,7 +79,10 @@ async function conectarLimon() {
   return poolLimon;
 }
 
-// Conectar Corporativo
+/**
+ * Conecta a la base de datos Corporativo
+ * @returns {Promise<sql.ConnectionPool>} Pool de conexión a Corporativo
+ */
 async function conectarCorporativo() {
   if (!poolCorporativo.connected) {
     await poolCorporativo.connect();
@@ -74,7 +91,10 @@ async function conectarCorporativo() {
   return poolCorporativo;
 }
 
-// Cerrar conexiones
+/**
+ * Cierra todas las conexiones a las bases de datos
+ * @returns {Promise<void>}
+ */
 async function cerrarConexiones() {
   await poolSanJose.close();
   await poolLimon.close();

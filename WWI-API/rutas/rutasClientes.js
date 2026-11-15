@@ -12,21 +12,25 @@ const {
   verificarAdministrador
 } = require('../middleware/middlewareAutorizacion');
 
+/**
+ * Enrutador para endpoints de clientes
+ * @type {express.Router}
+ */
 const enrutador = express.Router();
 
-// Listar clientes
+// GET /api/clientes - Listar clientes (solo Administradores)
 enrutador.get('/', verificarAdministrador, listarClientes);
 
-// Obtener detalle de un cliente
+// GET /api/clientes/:id - Obtener detalle de un cliente (solo Administradores)
 enrutador.get('/:id', verificarAdministrador, obtenerDetalleCliente);
 
-// Crear un cliente
+// POST /api/clientes - Crear un cliente (solo Administradores)
 enrutador.post('/', verificarAdministrador, crearCliente);
 
-// Actualizar un cliente
+// PUT /api/clientes/:id - Actualizar un cliente (solo Administradores)
 enrutador.put('/:id', verificarAdministrador, actualizarCliente);
 
-// Eliminar un cliente
+// DELETE /api/clientes/:id - Eliminar un cliente (solo Administradores)
 enrutador.delete('/:id', verificarAdministrador, eliminarCliente);
 
 module.exports = enrutador;

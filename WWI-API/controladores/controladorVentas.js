@@ -5,6 +5,11 @@ const {
   conectarCorporativo
 } = require('../config/db');
 
+/**
+ * Conecta a la base de datos según la sucursal especificada
+ * @param {string} sucursal - Nombre de la sucursal ('SanJose', 'Limon' o 'Corporativo')
+ * @returns {Promise<sql.ConnectionPool|null>} Pool de conexión o null si la sucursal no es válida
+ */
 async function obtenerConexion(sucursal) {
   if (sucursal === 'SanJose') return conectarSanJose();
   if (sucursal === 'Limon') return conectarLimon();
@@ -12,10 +17,20 @@ async function obtenerConexion(sucursal) {
   return null;
 }
 
+/**
+ * Valida que un ID sea un entero positivo válido
+ * @param {number} id - ID a validar
+ * @returns {boolean} true si el ID es válido
+ */
 function idValido(id) {
   return Number.isInteger(id) && id > 0 && id <= 2147483647;
 }
 
+/**
+ * Lista ventas paginadas con filtros opcionales
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function listarVentas(solicitud, respuesta) {
   try {
     const usuario = solicitud.session?.usuario;
@@ -145,6 +160,11 @@ async function listarVentas(solicitud, respuesta) {
   }
 }
 
+/**
+ * Obtiene el detalle de una factura (encabezado y líneas)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function detalleVenta(solicitud, respuesta) {
   try {
     const usuario = solicitud.session?.usuario;
@@ -199,6 +219,11 @@ async function detalleVenta(solicitud, respuesta) {
   }
 }
 
+/**
+ * Crea una nueva venta con sus líneas de factura
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function crearVenta(solicitud, respuesta) {
   try {
     const usuario = solicitud.session?.usuario;
@@ -317,6 +342,11 @@ async function crearVenta(solicitud, respuesta) {
   }
 }
 
+/**
+ * Actualiza una venta existente
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function actualizarVenta(solicitud, respuesta) {
   try {
     const usuario = solicitud.session?.usuario;
@@ -367,6 +397,11 @@ async function actualizarVenta(solicitud, respuesta) {
   }
 }
 
+/**
+ * Elimina una venta (reintegra inventario)
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ */
 async function eliminarVenta(solicitud, respuesta) {
   try {
     const usuario = solicitud.session?.usuario;
