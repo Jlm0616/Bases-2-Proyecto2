@@ -6,95 +6,86 @@ const {
 } = require('../config/db');
 
 async function conectarSucursal(sucursal) {
-  if (sucursal === 'SanJose') {
-    return await conectarSanJose();
-  }
-
-  if (sucursal === 'Limon') {
-    return await conectarLimon();
-  }
-
+  if (sucursal === 'SanJose') return conectarSanJose();
+  if (sucursal === 'Limon') return conectarLimon();
   return null;
 }
 
-const camposGenerales = {
-  SupplierName: sql.NVarChar(100),
-  SupplierCategoryID: sql.Int,
-  PaymentDays: sql.Int,
-  SupplierReference: sql.NVarChar(20)
-};
+function idValido(id) {
+  return Number.isInteger(id) && id > 0 && id <= 2147483647;
+}
 
-const camposPrivados = {
-  PrimaryContactPersonID: sql.Int,
-  AlternateContactPersonID: sql.Int,
-  DeliveryCityID: sql.Int,
-  PostalCityID: sql.Int,
-  PhoneNumber: sql.NVarChar(20),
-  FaxNumber: sql.NVarChar(20),
-  WebsiteURL: sql.NVarChar(256),
-  DeliveryAddressLine1: sql.NVarChar(60),
-  DeliveryPostalCode: sql.NVarChar(10),
-  PostalAddressLine1: sql.NVarChar(60),
-  PostalPostalCode: sql.NVarChar(10),
-  DeliveryMethodID: sql.Int,
-  BankAccountName: sql.NVarChar(50),
-  BankAccountBranch: sql.NVarChar(50),
-  BankAccountCode: sql.NVarChar(20),
-  BankAccountNumber: sql.NVarChar(20),
-  BankInternationalCode: sql.NVarChar(20),
-  InternalComments: sql.NVarChar(sql.MAX),
-  DeliveryAddressLine2: sql.NVarChar(60),
-  PostalAddressLine2: sql.NVarChar(60)
-};
+function validarProveedor(datos) {
+  const campos = [
+    'SupplierName',
+    'SupplierCategoryID',
+    'PaymentDays',
+    'PrimaryContactPersonID',
+    'AlternateContactPersonID',
+    'DeliveryCityID',
+    'PostalCityID',
+    'PhoneNumber',
+    'FaxNumber',
+    'WebsiteURL',
+    'DeliveryAddressLine1',
+    'DeliveryPostalCode',
+    'PostalAddressLine1',
+    'PostalPostalCode'
+  ];
 
-const obligatorios = [
-  "SupplierName",
-  "SupplierCategoryID",
-  "PaymentDays",
-  "PrimaryContactPersonID",
-  "AlternateContactPersonID",
-  "DeliveryCityID",
-  "PostalCityID",
-  "PhoneNumber",
-  "FaxNumber",
-  "WebsiteURL",
-  "DeliveryAddressLine1",
-  "DeliveryPostalCode",
-  "PostalAddressLine1",
-  "PostalPostalCode"
-];
-
-function validarDatos(datos) {
-  return obligatorios.filter(
-    campo => datos[campo] === undefined ||
-      datos[campo] === null ||
-      datos[campo] === ""
+  return campos.filter(campo =>
+    datos[campo] === undefined ||
+    datos[campo] === null ||
+    datos[campo] === ''
   );
 }
 
-function agregarCampos(request, campos, datos) {
-  for (const [nombre, tipo] of Object.entries(campos)) {
-    request.input(nombre, tipo, datos[nombre] ?? null);
-  }
-
-  return request;
+function agregarDatosGenerales(peticion, datos) {
+  return peticion
+    .input('SupplierName', sql.NVarChar(100), datos.SupplierName)
+    .input('SupplierCategoryID', sql.Int, datos.SupplierCategoryID)
+    .input('PaymentDays', sql.Int, datos.PaymentDays)
+    .input('SupplierReference', sql.NVarChar(20),
+      datos.SupplierReference ?? null);
 }
 
-function errorSQL(error) {
-  return error.originalError?.info?.message || error.message;
-}
-
-function validarSucursal(solicitud, respuesta) {
-  const sucursal = solicitud.session?.usuario?.sucursal;
-
-  if (!["SanJose", "Limon"].includes(sucursal)) {
-    respuesta.status(403).json({
-      mensaje: "Solo los administradores de sucursal pueden modificar proveedores"
-    });
-    return null;
-  }
-
-  return sucursal;
+function agregarDatosPrivados(peticion, datos) {
+  return peticion
+    .input('PrimaryContactPersonID', sql.Int,
+      datos.PrimaryContactPersonID)
+    .input('AlternateContactPersonID', sql.Int,
+      datos.AlternateContactPersonID)
+    .input('DeliveryCityID', sql.Int, datos.DeliveryCityID)
+    .input('PostalCityID', sql.Int, datos.PostalCityID)
+    .input('PhoneNumber', sql.NVarChar(20), datos.PhoneNumber)
+    .input('FaxNumber', sql.NVarChar(20), datos.FaxNumber)
+    .input('WebsiteURL', sql.NVarChar(256), datos.WebsiteURL)
+    .input('DeliveryAddressLine1', sql.NVarChar(60),
+      datos.DeliveryAddressLine1)
+    .input('DeliveryPostalCode', sql.NVarChar(10),
+      datos.DeliveryPostalCode)
+    .input('PostalAddressLine1', sql.NVarChar(60),
+      datos.PostalAddressLine1)
+    .input('PostalPostalCode', sql.NVarChar(10),
+      datos.PostalPostalCode)
+    .input('DeliveryMethodID', sql.Int,
+      datos.DeliveryMethodID ?? null)
+    .input('BankAccountName', sql.NVarChar(50),
+      datos.BankAccountName ?? null)
+    .input('BankAccountBranch', sql.NVarChar(50),
+      datos.BankAccountBranch ?? null)
+    .input('BankAccountCode', sql.NVarChar(20),
+      datos.BankAccountCode ?? null)
+    .input('BankAccountNumber', sql.NVarChar(20),
+      datos.BankAccountNumber ?? null)
+    .input('BankInternationalCode', sql.NVarChar(20),
+      datos.BankInternationalCode ?? null)
+    .input('InternalComments', sql.NVarChar(sql.MAX),
+      datos.InternalComments ?? null)
+    .input('DeliveryAddressLine2', sql.NVarChar(60),
+      datos.DeliveryAddressLine2 ?? null)
+    .input('PostalAddressLine2', sql.NVarChar(60),
+      datos.PostalAddressLine2 ?? null);
 }
 
 async function listarProveedores(solicitud, respuesta) {
@@ -104,20 +95,22 @@ async function listarProveedores(solicitud, respuesta) {
 
     if (!conexion) {
       return respuesta.status(403).json({
-        mensaje: 'Sucursal no válida'
+        mensaje: 'Sucursal no autorizada'
       });
     }
 
-    const pagina = Math.max(1, parseInt(solicitud.query.pagina) || 1);
-    const tamanoPagina = Math.min(
-      1000,
-      Math.max(1, parseInt(solicitud.query.tamanoPagina) || 10)
-    );
-
     const nombre = solicitud.query.nombre || null;
-    const categoriaID = solicitud.query.categoriaID
-      ? parseInt(solicitud.query.categoriaID)
-      : null;
+    const categoriaID = solicitud.query.categoriaID || null;
+    const pagina = Number(solicitud.query.pagina || 1);
+    const tamanoPagina = Number(solicitud.query.tamanoPagina || 10);
+
+    if (!idValido(pagina) || !idValido(tamanoPagina) ||
+        tamanoPagina > 1000 ||
+        (categoriaID !== null && !idValido(Number(categoriaID)))) {
+      return respuesta.status(400).json({
+        mensaje: 'Filtros o paginación no válidos'
+      });
+    }
 
     const resultado = await conexion.request()
       .input('Nombre', sql.NVarChar(100), nombre)
@@ -143,7 +136,7 @@ async function listarProveedores(solicitud, respuesta) {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error al listar proveedores:', error);
     return respuesta.status(500).json({
       mensaje: 'Error al listar proveedores'
     });
@@ -153,48 +146,48 @@ async function listarProveedores(solicitud, respuesta) {
 async function obtenerDetalleProveedor(solicitud, respuesta) {
   try {
     const id = Number(solicitud.params.id);
+    const sucursal = solicitud.session.usuario.sucursal;
 
-    if (!Number.isInteger(id) || id <= 0) {
+    if (!idValido(id)) {
       return respuesta.status(400).json({
         mensaje: 'ID de proveedor no válido'
       });
     }
 
-    const sucursal = solicitud.session.usuario.sucursal;
     const conexion = await conectarSucursal(sucursal);
 
     if (!conexion) {
       return respuesta.status(403).json({
-        mensaje: 'Sucursal no válida'
+        mensaje: 'Sucursal no autorizada'
       });
     }
 
-    const resultadoPublico = await conexion.request()
+    const publico = await conexion.request()
       .input('SupplierID', sql.Int, id)
       .execute('dbo.Prov_sp_DetalleProveedor');
 
-    if (resultadoPublico.recordset.length === 0) {
+    if (publico.recordset.length === 0) {
       return respuesta.status(404).json({
         mensaje: 'Proveedor no encontrado'
       });
     }
 
-    const conexionCorporativo = await conectarCorporativo();
+    const corporativo = await conectarCorporativo();
 
-    const resultadoPrivado = await conexionCorporativo.request()
+    const privado = await corporativo.request()
       .input('SupplierID', sql.Int, id)
       .execute('dbo.Prov_sp_DetalleProveedorPrivado');
 
     return respuesta.json({
       sucursal,
       proveedor: {
-        datosPublicos: resultadoPublico.recordset[0],
-        datosPrivados: resultadoPrivado.recordset[0] || null
+        datosPublicos: publico.recordset[0],
+        datosPrivados: privado.recordset[0] || null
       }
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error al consultar proveedor:', error);
     return respuesta.status(500).json({
       mensaje: 'Error al obtener el proveedor'
     });
@@ -202,88 +195,90 @@ async function obtenerDetalleProveedor(solicitud, respuesta) {
 }
 
 async function crearProveedor(solicitud, respuesta) {
-  const sucursal = validarSucursal(solicitud, respuesta);
-  if (!sucursal) return;
-
-  const faltantes = validarDatos(solicitud.body);
-
-  if (faltantes.length) {
-    return respuesta.status(400).json({
-      mensaje: "Faltan campos obligatorios",
-      campos: faltantes
-    });
-  }
-
   let supplierID = null;
   let generalCreado = false;
 
   try {
-    const corporativo = await conectarCorporativo();
-    const conexionSucursal = await conectarSucursal(sucursal);
+    const usuario = solicitud.session.usuario;
+    const datos = solicitud.body;
 
-    const resultadoID = await corporativo.request()
-      .execute("dbo.Prov_sp_GenerarSupplierID");
-
-    supplierID = resultadoID.recordset?.[0]?.SupplierID;
-
-    if (!Number.isInteger(supplierID) || supplierID <= 0) {
-      throw new Error("Corporativo no devolvió un SupplierID válido");
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden crear proveedores'
+      });
     }
 
-    const general = agregarCampos(
-      conexionSucursal.request(),
-      camposGenerales,
-      solicitud.body
+    const faltantes = validarProveedor(datos);
+
+    if (faltantes.length > 0) {
+      return respuesta.status(400).json({
+        mensaje: 'Faltan campos obligatorios',
+        campos: faltantes
+      });
+    }
+
+    const conexion = await conectarSucursal(usuario.sucursal);
+    const corporativo = await conectarCorporativo();
+
+    const resultadoID = await corporativo.request()
+      .execute('dbo.Prov_sp_GenerarSupplierID');
+
+    supplierID = resultadoID.recordset[0].SupplierID;
+
+    if (!idValido(supplierID)) {
+      throw new Error('No se generó un ID válido');
+    }
+
+    const general = agregarDatosGenerales(
+      conexion.request(), datos
     );
 
-    general.input("SupplierID", sql.Int, supplierID);
-    general.input(
-      "LastEditedBy",
-      sql.Int,
-      solicitud.session.usuario.id
-    );
+    await general
+      .input('SupplierID', sql.Int, supplierID)
+      .input('LastEditedBy', sql.Int, usuario.id)
+      .execute('dbo.Prov_sp_InsertarProveedorGeneral');
 
-    await general.execute("dbo.Prov_sp_InsertarProveedorGeneral");
     generalCreado = true;
 
-    const privado = agregarCampos(
-      corporativo.request(),
-      camposPrivados,
-      solicitud.body
+    const privado = agregarDatosPrivados(
+      corporativo.request(), datos
     );
 
-    privado.input("SupplierID", sql.Int, supplierID);
-
-    await privado.execute("dbo.Prov_sp_InsertarProveedorPrivado");
+    await privado
+      .input('SupplierID', sql.Int, supplierID)
+      .execute('dbo.Prov_sp_InsertarProveedorPrivado');
 
     return respuesta.status(201).json({
-      mensaje: "Proveedor creado correctamente",
+      mensaje: 'Proveedor creado correctamente',
       SupplierID: supplierID,
-      sucursal: sucursal
+      sucursal: usuario.sucursal
     });
-  } catch (error) {
-    console.error("Error al crear proveedor:", error);
 
-    let compensacion = "No requerida";
+  } catch (error) {
+    console.error('Error al crear proveedor:', error);
+
+    let compensacion = 'No requerida';
 
     if (generalCreado) {
       try {
+        const sucursal = solicitud.session.usuario.sucursal;
         const conexion = await conectarSucursal(sucursal);
 
         await conexion.request()
-          .input("SupplierID", sql.Int, supplierID)
-          .execute("dbo.Prov_sp_EliminarProveedorGeneral");
+          .input('SupplierID', sql.Int, supplierID)
+          .execute('dbo.Prov_sp_EliminarProveedorGeneral');
 
-        compensacion = "Realizada";
+        compensacion = 'Realizada';
+
       } catch (errorCompensacion) {
-        console.error("Error de compensación:", errorCompensacion);
-        compensacion = "Fallida: requiere revisión manual";
+        console.error('Error de compensación:', errorCompensacion);
+        compensacion = 'Fallida: requiere revisión manual';
       }
     }
 
     return respuesta.status(500).json({
-      mensaje: "No se pudo crear el proveedor",
-      error: errorSQL(error),
+      mensaje: 'No se pudo crear el proveedor',
       SupplierID: supplierID,
       compensacion: compensacion
     });
@@ -291,111 +286,113 @@ async function crearProveedor(solicitud, respuesta) {
 }
 
 async function actualizarProveedor(solicitud, respuesta) {
-  const sucursal = validarSucursal(solicitud, respuesta);
-  if (!sucursal) return;
-
-  const supplierID = Number(solicitud.params.id);
-
-  if (!Number.isSafeInteger(supplierID) || supplierID <= 0) {
-    return respuesta.status(400).json({
-      mensaje: "ID de proveedor inválido"
-    });
-  }
-
-  const faltantes = validarDatos(solicitud.body);
-
-  if (faltantes.length) {
-    return respuesta.status(400).json({
-      mensaje: "Faltan campos obligatorios",
-      campos: faltantes
-    });
-  }
-
   let generalActualizado = false;
 
   try {
-    const conexionSucursal = await conectarSucursal(sucursal);
+    const usuario = solicitud.session.usuario;
+    const id = Number(solicitud.params.id);
+    const datos = solicitud.body;
+
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden actualizar proveedores'
+      });
+    }
+
+    if (!idValido(id)) {
+      return respuesta.status(400).json({
+        mensaje: 'ID de proveedor no válido'
+      });
+    }
+
+    const faltantes = validarProveedor(datos);
+
+    if (faltantes.length > 0) {
+      return respuesta.status(400).json({
+        mensaje: 'Faltan campos obligatorios',
+        campos: faltantes
+      });
+    }
+
+    const conexion = await conectarSucursal(usuario.sucursal);
     const corporativo = await conectarCorporativo();
 
-    const general = agregarCampos(
-      conexionSucursal.request(),
-      camposGenerales,
-      solicitud.body
+    const general = agregarDatosGenerales(
+      conexion.request(), datos
     );
 
-    general.input("SupplierID", sql.Int, supplierID);
-    general.input(
-      "LastEditedBy",
-      sql.Int,
-      solicitud.session.usuario.id
-    );
+    await general
+      .input('SupplierID', sql.Int, id)
+      .input('LastEditedBy', sql.Int, usuario.id)
+      .execute('dbo.Prov_sp_ActualizarProveedorGeneral');
 
-    await general.execute("dbo.Prov_sp_ActualizarProveedorGeneral");
     generalActualizado = true;
 
-    const privado = agregarCampos(
-      corporativo.request(),
-      camposPrivados,
-      solicitud.body
+    const privado = agregarDatosPrivados(
+      corporativo.request(), datos
     );
 
-    privado.input("SupplierID", sql.Int, supplierID);
-
-    await privado.execute("dbo.Prov_sp_ActualizarProveedorPrivado");
+    await privado
+      .input('SupplierID', sql.Int, id)
+      .execute('dbo.Prov_sp_ActualizarProveedorPrivado');
 
     return respuesta.json({
-      mensaje: "Proveedor actualizado correctamente",
-      SupplierID: supplierID
+      mensaje: 'Proveedor actualizado correctamente',
+      SupplierID: id
     });
-  } catch (error) {
-    console.error("Error al actualizar proveedor:", error);
 
+  } catch (error) {
+    console.error('Error al actualizar proveedor:', error);
     return respuesta.status(500).json({
-      mensaje: "No se pudo completar la actualización",
-      error: errorSQL(error),
+      mensaje: 'No se pudo completar la actualización',
       actualizacionParcialPosible: generalActualizado
     });
   }
 }
 
 async function eliminarProveedor(solicitud, respuesta) {
-  const sucursal = validarSucursal(solicitud, respuesta);
-  if (!sucursal) return;
-
-  const supplierID = Number(solicitud.params.id);
-
-  if (!Number.isSafeInteger(supplierID) || supplierID <= 0) {
-    return respuesta.status(400).json({
-      mensaje: "ID de proveedor inválido"
-    });
-  }
-
   let generalEliminado = false;
 
   try {
-    const conexionSucursal = await conectarSucursal(sucursal);
+    const usuario = solicitud.session.usuario;
+    const id = Number(solicitud.params.id);
+
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden eliminar proveedores'
+      });
+    }
+
+    if (!idValido(id)) {
+      return respuesta.status(400).json({
+        mensaje: 'ID de proveedor no válido'
+      });
+    }
+
+    const conexion = await conectarSucursal(usuario.sucursal);
     const corporativo = await conectarCorporativo();
 
-    await conexionSucursal.request()
-      .input("SupplierID", sql.Int, supplierID)
-      .execute("dbo.Prov_sp_EliminarProveedorGeneral");
+    await conexion.request()
+      .input('SupplierID', sql.Int, id)
+      .execute('dbo.Prov_sp_EliminarProveedorGeneral');
 
     generalEliminado = true;
 
     await corporativo.request()
-      .input("SupplierID", sql.Int, supplierID)
-      .execute("dbo.Prov_sp_EliminarProveedorPrivado");
+      .input('SupplierID', sql.Int, id)
+      .execute('dbo.Prov_sp_EliminarProveedorPrivado');
 
     return respuesta.json({
-      mensaje: "Proveedor eliminado correctamente",
-      SupplierID: supplierID
+      mensaje: 'Proveedor eliminado correctamente',
+      SupplierID: id
     });
-  } catch (error) {
-    console.error("Error al eliminar proveedor:", error);
 
+  } catch (error) {
+    console.error('Error al eliminar proveedor:', error);
     return respuesta.status(500).json({
-      mensaje: "No se pudo completar la eliminación",
-      error: errorSQL(error),
+      mensaje: 'No se pudo completar la eliminación',
       eliminacionParcialPosible: generalEliminado
     });
   }

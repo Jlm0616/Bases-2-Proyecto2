@@ -5,67 +5,55 @@ const {
   conectarCorporativo
 } = require('../config/db');
 
-const camposProducto = {
-  Nombre: sql.NVarChar(100),
-  ProveedorID: sql.Int,
-  ColorID: sql.Int,
-  UnidadEmpaqueID: sql.Int,
-  EmpaqueExteriorID: sql.Int,
-  Marca: sql.NVarChar(50),
-  Tamano: sql.NVarChar(20),
-  DiasEntrega: sql.Int,
-  CantidadPorEmpaque: sql.Int,
-  RequiereRefrigeracion: sql.Bit,
-  CodigoBarras: sql.NVarChar(50),
-  Impuesto: sql.Decimal(18, 3),
-  PrecioUnitario: sql.Decimal(18, 2),
-  PrecioVenta: sql.Decimal(18, 2),
-  Peso: sql.Decimal(18, 3)
-};
+async function obtenerConexion(sucursal) {
+  if (sucursal === 'SanJose') return conectarSanJose();
+  if (sucursal === 'Limon') return conectarLimon();
+  if (sucursal === 'Corporativo') return conectarCorporativo();
+  return null;
+}
 
-function agregarParametrosProducto(request, datos) {
-  for (const [nombre, tipo] of Object.entries(camposProducto)) {
-    request.input(nombre, tipo, datos[nombre] ?? null);
-  }
-
-  return request;
+function idValido(id) {
+  return Number.isInteger(id) && id > 0 && id <= 2147483647;
 }
 
 function validarProducto(datos) {
-  const obligatorios = [
-    "Nombre",
-    "ProveedorID",
-    "UnidadEmpaqueID",
-    "EmpaqueExteriorID",
-    "DiasEntrega",
-    "CantidadPorEmpaque",
-    "RequiereRefrigeracion",
-    "Impuesto",
-    "PrecioUnitario",
-    "Peso"
+  const campos = [
+    'Nombre',
+    'ProveedorID',
+    'UnidadEmpaqueID',
+    'EmpaqueExteriorID',
+    'DiasEntrega',
+    'CantidadPorEmpaque',
+    'RequiereRefrigeracion',
+    'Impuesto',
+    'PrecioUnitario',
+    'Peso'
   ];
 
-  return obligatorios.filter(
-    (campo) => datos[campo] === undefined ||
-      datos[campo] === null ||
-      datos[campo] === ""
+  return campos.filter(campo =>
+    datos[campo] === undefined ||
+    datos[campo] === null ||
+    datos[campo] === ''
   );
 }
 
-async function obtenerConexion(sucursal) {
-  if (sucursal === 'SanJose') {
-    return await conectarSanJose();
-  }
-
-  if (sucursal === 'Limon') {
-    return await conectarLimon();
-  }
-
-  if (sucursal === 'Corporativo') {
-    return await conectarCorporativo();
-  }
-
-  throw new Error('Sucursal no válida');
+function agregarDatosProducto(peticion, datos) {
+  return peticion
+    .input('Nombre', sql.NVarChar(100), datos.Nombre)
+    .input('ProveedorID', sql.Int, datos.ProveedorID)
+    .input('ColorID', sql.Int, datos.ColorID ?? null)
+    .input('UnidadEmpaqueID', sql.Int, datos.UnidadEmpaqueID)
+    .input('EmpaqueExteriorID', sql.Int, datos.EmpaqueExteriorID)
+    .input('Marca', sql.NVarChar(50), datos.Marca ?? null)
+    .input('Tamano', sql.NVarChar(20), datos.Tamano ?? null)
+    .input('DiasEntrega', sql.Int, datos.DiasEntrega)
+    .input('CantidadPorEmpaque', sql.Int, datos.CantidadPorEmpaque)
+    .input('RequiereRefrigeracion', sql.Bit, datos.RequiereRefrigeracion)
+    .input('CodigoBarras', sql.NVarChar(50), datos.CodigoBarras ?? null)
+    .input('Impuesto', sql.Decimal(18, 3), datos.Impuesto)
+    .input('PrecioUnitario', sql.Decimal(18, 2), datos.PrecioUnitario)
+    .input('PrecioVenta', sql.Decimal(18, 2), datos.PrecioVenta ?? null)
+    .input('Peso', sql.Decimal(18, 3), datos.Peso);
 }
 
 async function listarProductos(solicitud, respuesta) {
@@ -73,10 +61,23 @@ async function listarProductos(solicitud, respuesta) {
     const sucursal = solicitud.session.usuario.sucursal;
     const conexion = await obtenerConexion(sucursal);
 
+    if (!conexion) {
+      return respuesta.status(403).json({
+        mensaje: 'Sucursal no autorizada'
+      });
+    }
+
     const nombre = solicitud.query.nombre || null;
     const grupoID = solicitud.query.grupoID || null;
-    const pagina = Number(solicitud.query.pagina) || 1;
-    const limite = Number(solicitud.query.limite) || 25;
+    const pagina = Number(solicitud.query.pagina || 1);
+    const limite = Number(solicitud.query.limite || 25);
+
+    if (!idValido(pagina) || !idValido(limite) || limite > 1000 ||
+        (grupoID !== null && !idValido(Number(grupoID)))) {
+      return respuesta.status(400).json({
+        mensaje: 'Filtros o paginación no válidos'
+      });
+    }
 
     const resultado = await conexion.request()
       .input('Nombre', sql.NVarChar(100), nombre)
@@ -92,7 +93,7 @@ async function listarProductos(solicitud, respuesta) {
 
     const total = conteo.recordset[0].Total;
 
-    respuesta.json({
+    return respuesta.json({
       pagina,
       limite,
       total,
@@ -101,9 +102,8 @@ async function listarProductos(solicitud, respuesta) {
     });
 
   } catch (error) {
-    console.error(error);
-
-    respuesta.status(500).json({
+    console.error('Error al listar productos:', error);
+    return respuesta.status(500).json({
       mensaje: 'Error al consultar productos'
     });
   }
@@ -113,7 +113,7 @@ async function detalleProducto(solicitud, respuesta) {
   try {
     const id = Number(solicitud.params.id);
 
-    if (!Number.isInteger(id) || id <= 0) {
+    if (!idValido(id)) {
       return respuesta.status(400).json({
         mensaje: 'ID de producto no válido'
       });
@@ -121,6 +121,12 @@ async function detalleProducto(solicitud, respuesta) {
 
     const sucursal = solicitud.session.usuario.sucursal;
     const conexion = await obtenerConexion(sucursal);
+
+    if (!conexion) {
+      return respuesta.status(403).json({
+        mensaje: 'Sucursal no autorizada'
+      });
+    }
 
     const resultado = await conexion.request()
       .input('StockItemID', sql.Int, id)
@@ -132,14 +138,13 @@ async function detalleProducto(solicitud, respuesta) {
       });
     }
 
-    respuesta.json({
+    return respuesta.json({
       producto: resultado.recordset[0]
     });
 
   } catch (error) {
-    console.error(error);
-
-    respuesta.status(500).json({
+    console.error('Error al consultar producto:', error);
+    return respuesta.status(500).json({
       mensaje: 'Error al consultar el detalle del producto'
     });
   }
@@ -147,11 +152,10 @@ async function detalleProducto(solicitud, respuesta) {
 
 async function inventarioPorSucursal(solicitud, respuesta) {
   try {
-    const usuario = solicitud.session.usuario;
-    const sucursalUsuario = usuario.sucursal;
+    const sucursalUsuario = solicitud.session.usuario.sucursal;
     const sucursal = solicitud.query.nombre || sucursalUsuario;
 
-    if (!['SanJose', 'Limon'].includes(sucursal)) {
+    if (sucursal !== 'SanJose' && sucursal !== 'Limon') {
       return respuesta.status(400).json({
         mensaje: 'Sucursal no válida'
       });
@@ -167,10 +171,9 @@ async function inventarioPorSucursal(solicitud, respuesta) {
     const pagina = Number(solicitud.query.pagina || 1);
     const limite = Number(solicitud.query.limite || 25);
 
-    if (!Number.isInteger(pagina) || pagina < 1 ||
-        !Number.isInteger(limite) || limite < 1 || limite > 1000) {
+    if (!idValido(pagina) || !idValido(limite) || limite > 1000) {
       return respuesta.status(400).json({
-        mensaje: 'Parámetros de paginación no válidos'
+        mensaje: 'Paginación no válida'
       });
     }
 
@@ -182,7 +185,7 @@ async function inventarioPorSucursal(solicitud, respuesta) {
       .input('PageSize', sql.Int, limite)
       .execute('dbo.Inv_sp_InventarioPorSucursal');
 
-    respuesta.json({
+    return respuesta.json({
       sucursal,
       pagina,
       limite,
@@ -190,9 +193,8 @@ async function inventarioPorSucursal(solicitud, respuesta) {
     });
 
   } catch (error) {
-    console.error(error);
-
-    respuesta.status(500).json({
+    console.error('Error al consultar inventario:', error);
+    return respuesta.status(500).json({
       mensaje: 'Error al consultar inventario por sucursal'
     });
   }
@@ -203,10 +205,9 @@ async function inventarioConsolidado(solicitud, respuesta) {
     const pagina = Number(solicitud.query.pagina || 1);
     const limite = Number(solicitud.query.limite || 25);
 
-    if (!Number.isInteger(pagina) || pagina < 1 ||
-        !Number.isInteger(limite) || limite < 1 || limite > 1000) {
+    if (!idValido(pagina) || !idValido(limite) || limite > 1000) {
       return respuesta.status(400).json({
-        mensaje: 'Parámetros de paginación no válidos'
+        mensaje: 'Paginación no válida'
       });
     }
 
@@ -217,16 +218,15 @@ async function inventarioConsolidado(solicitud, respuesta) {
       .input('PageSize', sql.Int, limite)
       .execute('dbo.Inv_sp_InventarioConsolidado');
 
-    respuesta.json({
+    return respuesta.json({
       pagina,
       limite,
       inventario: resultado.recordset
     });
 
   } catch (error) {
-    console.error(error);
-
-    respuesta.status(500).json({
+    console.error('Error al consultar inventario consolidado:', error);
+    return respuesta.status(500).json({
       mensaje: 'Error al consultar inventario consolidado'
     });
   }
@@ -234,133 +234,135 @@ async function inventarioConsolidado(solicitud, respuesta) {
 
 async function crearProducto(solicitud, respuesta) {
   try {
-    const faltantes = validarProducto(solicitud.body);
+    const usuario = solicitud.session.usuario;
+    const datos = solicitud.body;
 
-    if (faltantes.length > 0) {
-      return respuesta.status(400).json({
-        mensaje: "Faltan campos obligatorios",
-        campos: faltantes
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden crear productos'
       });
     }
 
-    const { sucursal, id } = solicitud.session.usuario;
+    const faltantes = validarProducto(datos);
 
-    if (!["SanJose", "Limon"].includes(sucursal)) {
-      return respuesta.status(403).json({
-        mensaje: "Solo las sucursales pueden crear productos"
+    if (faltantes.length > 0) {
+      return respuesta.status(400).json({
+        mensaje: 'Faltan campos obligatorios',
+        campos: faltantes
       });
     }
 
     const corporativo = await conectarCorporativo();
 
     const resultadoID = await corporativo.request()
-      .execute("dbo.Inv_sp_GenerarStockItemID");
+      .execute('dbo.Inv_sp_GenerarStockItemID');
 
     const nuevoID = resultadoID.recordset[0].StockItemID;
+    const conexion = await obtenerConexion(usuario.sucursal);
 
-    const conexion = await obtenerConexion(sucursal);
+    const peticion = agregarDatosProducto(conexion.request(), datos);
 
-    const request = agregarParametrosProducto(
-      conexion.request(),
-      solicitud.body
-    );
-
-    request.input("StockItemID", sql.Int, nuevoID);
-    request.input("UsuarioEditor", sql.Int, id);
-
-    const resultado = await request.execute(
-      "dbo.Inv_sp_CrearProducto"
-    );
+    const resultado = await peticion
+      .input('StockItemID', sql.Int, nuevoID)
+      .input('UsuarioEditor', sql.Int, usuario.id)
+      .execute('dbo.Inv_sp_CrearProducto');
 
     return respuesta.status(201).json({
-      mensaje: "Producto creado correctamente",
+      mensaje: 'Producto creado correctamente',
       producto: resultado.recordset[0]
     });
-  } catch (error) {
-    console.error("Error al crear producto:", error);
 
+  } catch (error) {
+    console.error('Error al crear producto:', error);
     return respuesta.status(500).json({
-      mensaje: "No se pudo crear el producto",
-      error: error.originalError?.info?.message || error.message
+      mensaje: 'No se pudo crear el producto'
     });
   }
 }
 
 async function actualizarProducto(solicitud, respuesta) {
   try {
-    const stockItemID = Number(solicitud.params.id);
+    const usuario = solicitud.session.usuario;
+    const id = Number(solicitud.params.id);
+    const datos = solicitud.body;
 
-    if (!Number.isSafeInteger(stockItemID) || stockItemID <= 0) {
-      return respuesta.status(400).json({
-        mensaje: "ID de producto inválido"
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden actualizar productos'
       });
     }
 
-    const faltantes = validarProducto(solicitud.body);
+    if (!idValido(id)) {
+      return respuesta.status(400).json({
+        mensaje: 'ID de producto no válido'
+      });
+    }
+
+    const faltantes = validarProducto(datos);
 
     if (faltantes.length > 0) {
       return respuesta.status(400).json({
-        mensaje: "Faltan campos obligatorios",
+        mensaje: 'Faltan campos obligatorios',
         campos: faltantes
       });
     }
 
-    const { sucursal, id } = solicitud.session.usuario;
-    const conexion = await obtenerConexion(sucursal);
+    const conexion = await obtenerConexion(usuario.sucursal);
+    const peticion = agregarDatosProducto(conexion.request(), datos);
 
-    const request = agregarParametrosProducto(
-      conexion.request(),
-      solicitud.body
-    );
-
-    request.input("StockItemID", sql.Int, stockItemID);
-    request.input("UsuarioEditor", sql.Int, id);
-
-    const resultado = await request.execute(
-      "dbo.Inv_sp_ActualizarProducto"
-    );
+    const resultado = await peticion
+      .input('StockItemID', sql.Int, id)
+      .input('UsuarioEditor', sql.Int, usuario.id)
+      .execute('dbo.Inv_sp_ActualizarProducto');
 
     return respuesta.json({
-      mensaje: "Producto actualizado correctamente",
+      mensaje: 'Producto actualizado correctamente',
       producto: resultado.recordset[0]
     });
-  } catch (error) {
-    console.error("Error al actualizar producto:", error);
 
+  } catch (error) {
+    console.error('Error al actualizar producto:', error);
     return respuesta.status(500).json({
-      mensaje: "No se pudo actualizar el producto",
-      error: error.originalError?.info?.message || error.message
+      mensaje: 'No se pudo actualizar el producto'
     });
   }
 }
 
 async function eliminarProducto(solicitud, respuesta) {
   try {
-    const stockItemID = Number(solicitud.params.id);
+    const usuario = solicitud.session.usuario;
+    const id = Number(solicitud.params.id);
 
-    if (!Number.isSafeInteger(stockItemID) || stockItemID <= 0) {
-      return respuesta.status(400).json({
-        mensaje: "ID de producto inválido"
+    if (usuario.sucursal !== 'SanJose' &&
+        usuario.sucursal !== 'Limon') {
+      return respuesta.status(403).json({
+        mensaje: 'Solo las sucursales pueden eliminar productos'
       });
     }
 
-    const { sucursal } = solicitud.session.usuario;
-    const conexion = await obtenerConexion(sucursal);
+    if (!idValido(id)) {
+      return respuesta.status(400).json({
+        mensaje: 'ID de producto no válido'
+      });
+    }
+
+    const conexion = await obtenerConexion(usuario.sucursal);
 
     const resultado = await conexion.request()
-      .input("StockItemID", sql.Int, stockItemID)
-      .execute("dbo.Inv_sp_EliminarProducto");
+      .input('StockItemID', sql.Int, id)
+      .execute('dbo.Inv_sp_EliminarProducto');
 
     return respuesta.json({
-      mensaje: "Producto eliminado correctamente",
+      mensaje: 'Producto eliminado correctamente',
       resultado: resultado.recordset[0]
     });
-  } catch (error) {
-    console.error("Error al eliminar producto:", error);
 
+  } catch (error) {
+    console.error('Error al eliminar producto:', error);
     return respuesta.status(500).json({
-      mensaje: "No se pudo eliminar el producto",
-      error: error.originalError?.info?.message || error.message
+      mensaje: 'No se pudo eliminar el producto'
     });
   }
 }

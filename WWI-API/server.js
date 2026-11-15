@@ -9,6 +9,7 @@ const rutasClientes = require('./rutas/rutasClientes');
 const rutasProveedores = require('./rutas/rutasProveedores');
 const rutasProductos = require('./rutas/rutasProductos');
 const rutasVentas = require('./rutas/rutasVentas');
+const rutasReportes = require('./rutas/rutasReportes');
 
 const aplicacion = express();
 const puerto = process.env.PORT || 3000;
@@ -49,6 +50,7 @@ aplicacion.use('/api/clientes', rutasClientes);
 aplicacion.use('/api/proveedores', rutasProveedores);
 aplicacion.use('/api/productos', rutasProductos);
 aplicacion.use('/api/ventas', rutasVentas);
+aplicacion.use('/api/reportes', rutasReportes);
 
 aplicacion.listen(puerto, () => {
   console.log(`API ejecutándose en http://localhost:${puerto}`);
