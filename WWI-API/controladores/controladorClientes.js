@@ -22,6 +22,76 @@ async function conectarSucursal(sucursal) {
 }
 
 /**
+ * Ejecuta una consulta con respaldo automático
+ * Para Corporativo, intenta SanJosé primero y si falla, intenta Limón
+ * @param {string} sucursal - Nombre de la sucursal
+ * @param {Function} operacion - Función que ejecuta la consulta SQL
+ * @returns {Promise<{sucursal: string, datos: any}>} Resultado con la sucursal usada y los datos
+ */
+async function consultarConRespaldo(sucursal, operacion) {
+  if (sucursal !== 'Corporativo') {
+    const conexion = await conectarSucursal(sucursal);
+    return {
+      sucursal,
+      datos: await operacion(conexion)
+    };
+  }
+
+  try {
+    const conexion = await conectarSanJose();
+
+    return {
+      sucursal: 'SanJose',
+      datos: await operacion(conexion)
+    };
+  } catch (errorSanJose) {
+    console.error(
+      'Falló la consulta en San José. Intentando Limón:',
+      errorSanJose
+    );
+
+    const conexion = await conectarLimon();
+
+    return {
+      sucursal: 'Limon',
+      datos: await operacion(conexion)
+    };
+  }
+}
+
+/**
+ * Determina la sucursal para consultas (lectura)
+ * Corporativo puede especificar sucursal por query param
+ * Sucursales solo pueden consultar su propia base de datos
+ * @param {import('express').Request} solicitud - Objeto de solicitud Express
+ * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * @returns {string|null} Nombre de la sucursal o null si hay error
+ */
+function sucursalParaConsulta(solicitud, respuesta) {
+  const usuario = solicitud.session?.usuario;
+
+  if (!usuario) {
+    respuesta.status(401).json({
+      mensaje: 'Sesión requerida'
+    });
+    return null;
+  }
+
+  if (usuario.sucursal === 'Corporativo') {
+    return 'Corporativo';
+  }
+
+  if (!['SanJose', 'Limon'].includes(usuario.sucursal)) {
+    respuesta.status(403).json({
+      mensaje: 'Sucursal no autorizada'
+    });
+    return null;
+  }
+
+  return usuario.sucursal;
+}
+
+/**
  * Valida que un ID sea un entero positivo válido
  */
 function idValido(id) {
@@ -33,14 +103,8 @@ function idValido(id) {
  */
 async function listarClientes(solicitud, respuesta) {
   try {
-    const sucursal = solicitud.session.usuario.sucursal;
-    const conexion = await conectarSucursal(sucursal);
-
-    if (!conexion) {
-      return respuesta.status(403).json({
-        mensaje: 'Sucursal no autorizada'
-      });
-    }
+    const sucursal = sucursalParaConsulta(solicitud, respuesta);
+    if (!sucursal) return;
 
     const nombre = solicitud.query.nombre || null;
     const categoria = solicitud.query.categoriaID || null;
@@ -61,27 +125,37 @@ async function listarClientes(solicitud, respuesta) {
       });
     }
 
-    const resultado = await conexion.request()
-      .input('Nombre', sql.NVarChar(100), nombre)
-      .input('CategoriaID', sql.Int, categoria)
-      .input('PageNumber', sql.Int, pagina)
-      .input('PageSize', sql.Int, tamanoPagina)
-      .execute('dbo.Cli_sp_ListarClientesPaginado');
+    const consulta = await consultarConRespaldo(
+      sucursal,
+      async conexion => {
+        const resultado = await conexion.request()
+          .input('Nombre', sql.NVarChar(100), nombre)
+          .input('CategoriaID', sql.Int, categoria)
+          .input('PageNumber', sql.Int, pagina)
+          .input('PageSize', sql.Int, tamanoPagina)
+          .execute('dbo.Cli_sp_ListarClientesPaginado');
 
-    const conteo = await conexion.request()
-      .input('Nombre', sql.NVarChar(100), nombre)
-      .input('CategoriaID', sql.Int, categoria)
-      .execute('dbo.Cli_sp_ContarClientes');
+        const conteo = await conexion.request()
+          .input('Nombre', sql.NVarChar(100), nombre)
+          .input('CategoriaID', sql.Int, categoria)
+          .execute('dbo.Cli_sp_ContarClientes');
 
-    const totalClientes = conteo.recordset[0].Total;
+        return {
+          clientes: resultado.recordset,
+          totalClientes: Number(conteo.recordset[0].Total)
+        };
+      }
+    );
+
+    const totalClientes = consulta.datos.totalClientes;
 
     return respuesta.json({
-      sucursal: sucursal,
+      sucursal: consulta.sucursal,
       pagina: pagina,
       tamanoPagina: tamanoPagina,
       totalClientes: totalClientes,
       totalPaginas: Math.ceil(totalClientes / tamanoPagina),
-      clientes: resultado.recordset
+      clientes: consulta.datos.clientes
     });
 
   } catch (error) {
@@ -99,7 +173,8 @@ async function listarClientes(solicitud, respuesta) {
 async function obtenerDetalleCliente(solicitud, respuesta) {
   try {
     const idCliente = Number(solicitud.params.id);
-    const sucursal = solicitud.session.usuario.sucursal;
+    const sucursal = sucursalParaConsulta(solicitud, respuesta);
+    if (!sucursal) return;
 
     if (!idValido(idCliente)) {
       return respuesta.status(400).json({
@@ -107,17 +182,14 @@ async function obtenerDetalleCliente(solicitud, respuesta) {
       });
     }
 
-    const conexionSucursal = await conectarSucursal(sucursal);
+    const consulta = await consultarConRespaldo(
+      sucursal,
+      async conexion => conexion.request()
+        .input('CustomerID', sql.Int, idCliente)
+        .execute('dbo.Cli_sp_DetalleCliente')
+    );
 
-    if (!conexionSucursal) {
-      return respuesta.status(403).json({
-        mensaje: 'Sucursal no autorizada'
-      });
-    }
-
-    const publico = await conexionSucursal.request()
-      .input('CustomerID', sql.Int, idCliente)
-      .execute('dbo.Cli_sp_DetalleCliente');
+    const publico = consulta.datos;
 
     if (publico.recordset.length === 0) {
       return respuesta.status(404).json({
@@ -138,7 +210,7 @@ async function obtenerDetalleCliente(solicitud, respuesta) {
     }
 
     return respuesta.json({
-      sucursal: sucursal,
+      sucursal: consulta.sucursal,
       cliente: {
         datosPublicos: publico.recordset[0],
         datosPrivados: privado.recordset[0]

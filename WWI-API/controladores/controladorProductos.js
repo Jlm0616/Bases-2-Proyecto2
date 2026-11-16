@@ -84,7 +84,13 @@ function agregarDatosProducto(peticion, datos) {
  */
 async function listarProductos(solicitud, respuesta) {
   try {
-    const sucursal = solicitud.session.usuario.sucursal;
+    let sucursal = solicitud.session.usuario.sucursal;
+
+    // Corporativo consulta productos desde SanJosé por defecto
+    if (sucursal === 'Corporativo') {
+      sucursal = 'SanJose';
+    }
+
     const conexion = await obtenerConexion(sucursal);
 
     if (!conexion) {
@@ -150,7 +156,13 @@ async function detalleProducto(solicitud, respuesta) {
       });
     }
 
-    const sucursal = solicitud.session.usuario.sucursal;
+    let sucursal = solicitud.session.usuario.sucursal;
+
+    // Corporativo consulta productos desde SanJosé por defecto
+    if (sucursal === 'Corporativo') {
+      sucursal = 'SanJose';
+    }
+
     const conexion = await obtenerConexion(sucursal);
 
     if (!conexion) {

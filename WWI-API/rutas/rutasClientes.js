@@ -9,6 +9,7 @@ const {
 } = require('../controladores/controladorClientes');
 
 const {
+  verificarSesion,
   verificarAdministrador
 } = require('../middleware/middlewareAutorizacion');
 
@@ -18,11 +19,11 @@ const {
  */
 const enrutador = express.Router();
 
-// GET /api/clientes - Listar clientes (solo Administradores)
-enrutador.get('/', verificarAdministrador, listarClientes);
+// GET /api/clientes - Listar clientes (todos los roles)
+enrutador.get('/', verificarSesion, listarClientes);
 
-// GET /api/clientes/:id - Obtener detalle de un cliente (solo Administradores)
-enrutador.get('/:id', verificarAdministrador, obtenerDetalleCliente);
+// GET /api/clientes/:id - Obtener detalle de un cliente (todos los roles)
+enrutador.get('/:id', verificarSesion, obtenerDetalleCliente);
 
 // POST /api/clientes - Crear un cliente (solo Administradores)
 enrutador.post('/', verificarAdministrador, crearCliente);

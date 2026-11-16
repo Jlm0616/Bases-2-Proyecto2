@@ -6,6 +6,10 @@ import { ContextoAutenticacion } from '../../contextos/ContextoAutenticacion';
 import BarraSuperior from '../../componentes/BarraSuperior';
 import BarraLateral from '../../componentes/BarraLateral';
 
+import ClientesCorporativo from './ClientesCorporativo';
+import ProductosCorporativo from './ProductosCorporativo';
+import ProveedoresCorporativo from './ProveedoresCorporativo';
+import Ventas from '../sucursal/Ventas';
 import Reportes from './Reportes';
 
 import '../../estilos/estructuraPanel.css';
@@ -41,6 +45,18 @@ export default function InicioCorporativo() {
             </section>
           </>
         );
+
+      case 'clientes':
+        return <ClientesCorporativo />;
+
+      case 'productos':
+        return <ProductosCorporativo />;
+
+      case 'proveedores':
+        return <ProveedoresCorporativo />;
+
+      case 'ventas':
+        return <Ventas />;
 
       case 'reportes':
         return <Reportes />;
