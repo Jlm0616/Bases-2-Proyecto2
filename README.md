@@ -12,7 +12,7 @@
 | Maikel Flores Navarro | 2024148346 |
 
 **Curso:** Bases de Datos 2  
-**Fecha de entrega:** 4 de octubre de 2026, 10:00 PM
+**Fecha de entrega:** 15 de noviembre de 2026, 11:00 PM
 
 ---
 
@@ -20,7 +20,7 @@
 
 Sistema de gestión empresarial para Wide World Importers con arquitectura de base de datos fragmentada en tres nodos:
 - **SanJosé**: Base de datos de la sucursal de San José
-- **Limón**: Base de datos de la sucursal de Limón  
+- **Limón**: Base de datos de la sucursal de Limón
 - **Corporativo**: Base de datos consolidada con datos privados de clientes/proveedores y reportes estadísticos
 
 La aplicación incluye:
@@ -43,12 +43,12 @@ El sistema utiliza una arquitectura de fragmentación horizontal con tres bases 
 #### **Nodo SanJosé (Sucursal)**
 - Datos públicos: clientes, proveedores, productos, ventas, inventario
 - Solo administradores de SanJosé pueden modificar datos
-- Puerto: 1433 (host: 1433)
+- Puerto: 15433 (host: 15433)
 
 #### **Nodo Limón (Sucursal)**
 - Datos públicos: clientes, proveedores, productos, ventas, inventario
 - Solo administradores de Limón pueden modificar datos
-- Puerto: 1434 (host: 1434)
+- Puerto: 15434 (host: 15434)
 
 #### **Nodo Corporativo (Consolidado)**
 - Datos privados: información confidencial de clientes y proveedores
@@ -56,7 +56,7 @@ El sistema utiliza una arquitectura de fragmentación horizontal con tres bases 
 - Inventario consolidado de todas las sucursales
 - Tablas receptoras para sincronización de compras
 - Solo usuarios Corporativo pueden acceder
-- Puerto: 1435 (host: 1435)
+- Puerto: 15435 (host: 15435)
 
 ### 2. API Backend (Node.js + Express)
 
@@ -103,8 +103,6 @@ El sistema utiliza una arquitectura de fragmentación horizontal con tres bases 
 ```
 Bases-2-Proyecto2/
 ├── README.md
-├── docker-compose.yml              # Docker Compose para base de datos
-├── docker-compose.db.yml          # Docker Compose específico para SQL Server
 ├── .gitignore
 │
 ├── Script/                        # Scripts SQL para configuración
@@ -203,21 +201,33 @@ Bases-2-Proyecto2/
 - Node.js v18 o superior
 - SQL Server Management Studio (SSMS) u otro cliente SQL
 
-### 1. Levantar las Bases de Datos (Docker)
+### 1. Crear los Contenedores de Base de Datos Manualmente
 
+Los contenedores de SQL Server se crean manualmente en Docker Desktop con los siguientes comandos:
+
+**Contenedor SanJosé:**
 ```powershell
-cd C:\Users\Usuario\Documents\GitHub\Bases-2-Proyecto2
-docker-compose -f docker-compose.db.yml up -d
+docker run -d --name sql-sanjose -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Sql1234! -e MSSQL_AGENT_ENABLED=true -p 15433:1433 mcr.microsoft.com/mssql/server:2025-latest
 ```
 
-Esto iniciará tres contenedores de SQL Server:
-- `sqlserver-sanjose` (puerto 1433)
-- `sqlserver-limon` (puerto 1434)
-- `sqlserver-corporativo` (puerto 1435)
+**Contenedor Limón:**
+```powershell
+docker run -d --name sql-limon -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Sql1234! -e MSSQL_AGENT_ENABLED=true -p 15434:1433 mcr.microsoft.com/mssql/server:2025-latest
+```
+
+**Contenedor Corporativo:**
+```powershell
+docker run -d --name sql-corp -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=Sql1234! -e MSSQL_AGENT_ENABLED=true -p 15435:1433 mcr.microsoft.com/mssql/server:2025-latest
+```
 
 **Credenciales de conexión:**
 - Usuario: `sa`
-- Contraseña: `<TU_PASSWORD>`
+- Contraseña: `Sql1234!`
+
+**Puertos del host:**
+- SanJosé: 15433
+- Limón: 15434
+- Corporativo: 15435
 
 ### 2. Ejecutar los Scripts SQL
 
@@ -704,29 +714,32 @@ Cada tabla tiene FK de líneas hacia su tabla de órdenes correspondiente.
 ### Backend (.env en WWI-API/)
 
 ```env
-# SanJosé
-DB_SERVER_SANJOSE=localhost
-DB_PORT_SANJOSE=1433
-DB_USER_SANJOSE=sa
-DB_PASSWORD_SANJOSE=<TU_PASSWORD>
-DB_NAME_SANJOSE=SanJose
+# CONFIGURACION GENERAL
+PORT=3000
+NODE_ENV=development
 
-# Limón
-DB_SERVER_LIMON=localhost
-DB_PORT_LIMON=1434
-DB_USER_LIMON=sa
-DB_PASSWORD_LIMON=<TU_PASSWORD>
-DB_NAME_LIMON=Limon
+# SAN JOSE
+DB_SJ_SERVER=localhost
+DB_SJ_PORT=15433
+DB_SJ_DATABASE=WWI_SanJose
+DB_SJ_USER=sa
+DB_SJ_PASSWORD=Sql1234!
 
-# Corporativo
-DB_SERVER_CORPORATIVO=localhost
-DB_PORT_CORPORATIVO=1435
-DB_USER_CORPORATIVO=sa
-DB_PASSWORD_CORPORATIVO=<TU_PASSWORD>
-DB_NAME_CORPORATIVO=WWI_Corporativo
+# LIMON
+DB_LIM_SERVER=localhost
+DB_LIM_PORT=15434
+DB_LIM_DATABASE=WWI_Limon
+DB_LIM_USER=sa
+DB_LIM_PASSWORD=Sql1234!
 
-# Sesión
-SESSION_SECRET=<TU_SECRETO>
+# CORPORATIVO
+DB_CORP_SERVER=localhost
+DB_CORP_PORT=15435
+DB_CORP_DATABASE=WWI_Corporativo
+DB_CORP_USER=sa
+DB_CORP_PASSWORD=Sql1234!
+
+SESSION_SECRET=B41l3nc0m0ju4n4l4cuhb4n4
 ```
 
 ---
