@@ -708,25 +708,25 @@ Cada tabla tiene FK de líneas hacia su tabla de órdenes correspondiente.
 DB_SERVER_SANJOSE=localhost
 DB_PORT_SANJOSE=1433
 DB_USER_SANJOSE=sa
-DB_PASSWORD_SANJOSE=SqlServer1234!
+DB_PASSWORD_SANJOSE=<TU_PASSWORD>
 DB_NAME_SANJOSE=SanJose
 
 # Limón
 DB_SERVER_LIMON=localhost
 DB_PORT_LIMON=1434
 DB_USER_LIMON=sa
-DB_PASSWORD_LIMON=SqlServer1234!
+DB_PASSWORD_LIMON=<TU_PASSWORD>
 DB_NAME_LIMON=Limon
 
 # Corporativo
 DB_SERVER_CORPORATIVO=localhost
 DB_PORT_CORPORATIVO=1435
 DB_USER_CORPORATIVO=sa
-DB_PASSWORD_CORPORATIVO=SqlServer1234!
+DB_PASSWORD_CORPORATIVO=<TU_PASSWORD>
 DB_NAME_CORPORATIVO=WWI_Corporativo
 
 # Sesión
-SESSION_SECRET=tu_secreto_super_seguro_aqui
+SESSION_SECRET=<TU_SECRETO>
 ```
 
 ---
@@ -770,11 +770,13 @@ app.use(session({
 ### Lado del Servidor
 
 - IDs: deben ser enteros positivos <= 2147483647
-- Paginación: página >= 1, tamanoPagina entre 1 y 1000
+- Paginación: página mayor o igual a 1
+- El límite máximo de registros depende del módulo:
+  - En Ventas, el parámetro `limite` admite valores entre 1 y 500
+  - En los demás módulos se aplican los límites definidos en sus controladores
 - Categorías: IDs válidos
 - Ventas: al menos una línea, IDs de productos duplicados prohibidos
 - TVP: Validación de campos obligatorios en líneas de factura
-- Paginación: limite/tamanoPagina entre 1 y 500
 
 ### Lado del Cliente
 
@@ -809,41 +811,6 @@ app.use(session({
 ## Objetivos No Alcanzados
 
 Ninguno. Todos los objetivos planteados fueron alcanzados.
-
----
-
-## Pruebas Finales
-
-Antes de la entrega del proyecto, se recomienda realizar las siguientes pruebas:
-
-### Pruebas de Base de Datos
-- Verificar que los 3 contenedores de SQL Server estén corriendo
-- Ejecutar los scripts SQL en cada base de datos
-- Verificar que los procedimientos almacenados existan
-- Probar la conexión desde la API a cada base de datos
-
-### Pruebas de API
-- Probar login con usuarios de diferentes roles
-- Verificar que el middleware de autorización funcione correctamente
-- Probar endpoints de lectura (GET) con y sin sesión
-- Probar endpoints de escritura (POST, PUT, DELETE) con roles no autorizados
-- Verificar que Corporativo pueda consultar clientes/proveedores con respaldo automático
-- Probar el inventario consolidado para Corporativo
-
-### Pruebas de Frontend
-- Probar el flujo completo de autenticación
-- Verificar que los paneles correspondan al rol correcto
-- Probar CRUD en cada módulo para administradores de sucursal
-- Verificar que Corporativo tenga solo lectura en clientes/proveedores
-- Probar el selector de sucursal en ventas para Corporativo
-- Probar la paginación y filtros en todos los módulos
-- Verificar que las sesiones persistan correctamente
-
-### Pruebas de Integración
-- Crear un cliente desde SanJosé y verificar que aparezca en Limón (datos públicos)
-- Crear una venta y verificar que el inventario se actualice
-- Verificar que los datos privados solo estén en Corporativo
-- Probar la eliminación de ventas y verificación de reintegro de inventario
 
 ---
 
