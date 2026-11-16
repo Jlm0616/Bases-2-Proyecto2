@@ -7,10 +7,16 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_MontosProveedores
     @NombreProveedor NVARCHAR(100) = NULL,
-    @Categoria NVARCHAR(100) = NULL
+    @Categoria NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Proveedores AS (
         SELECT
@@ -45,6 +51,8 @@ BEGIN
         INNER JOIN dbo.Cmp_LineasOrdenCompraUnificadas AS L
             ON L.PurchaseOrderID = O.PurchaseOrderID
            AND L.SucursalID = O.SucursalID
+        WHERE
+            (@SucursalID IS NULL OR O.SucursalID = @SucursalID)
         GROUP BY
             O.SucursalID,
             O.PurchaseOrderID,
@@ -101,16 +109,23 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 02: MONTOS DE CLIENTES
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_MontosClientes
     @NombreCliente NVARCHAR(100) = NULL,
-    @Categoria NVARCHAR(100) = NULL
+    @Categoria NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Clientes AS (
         SELECT
@@ -142,6 +157,8 @@ BEGIN
         INNER JOIN dbo.Vta_LineasFacturaUnificadas AS L
             ON L.InvoiceID = F.InvoiceID
            AND L.SucursalID = F.SucursalID
+        WHERE
+            (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
         GROUP BY
             F.SucursalID,
             F.InvoiceID,
@@ -199,15 +216,22 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 03: TOP 5 PRODUCTOS POR GANANCIA
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_Top5ProductosPorGanancia
-    @Anio INT = NULL
+    @Anio INT = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH GananciasProductos AS (
         SELECT
@@ -219,8 +243,8 @@ BEGIN
             ON L.InvoiceID = F.InvoiceID
            AND L.SucursalID = F.SucursalID
         WHERE
-            @Anio IS NULL
-            OR YEAR(F.InvoiceDate) = @Anio
+            (@Anio IS NULL OR YEAR(F.InvoiceDate) = @Anio)
+            AND (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
         GROUP BY
             YEAR(F.InvoiceDate),
             L.StockItemID
@@ -272,16 +296,23 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 04: TOP 5 CLIENTES POR FACTURAS
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_Top5ClientesPorFacturas
     @AnioInicio INT = NULL,
-    @AnioFin INT = NULL
+    @AnioFin INT = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Clientes AS (
         SELECT
@@ -316,6 +347,7 @@ BEGIN
             (@AnioInicio IS NULL OR YEAR(F.InvoiceDate) >= @AnioInicio)
             AND
             (@AnioFin IS NULL OR YEAR(F.InvoiceDate) <= @AnioFin)
+            AND (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
         GROUP BY
             F.SucursalID,
             F.InvoiceID,
@@ -365,16 +397,23 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 05: TOP 5 PROVEEDORES POR ÓRDENES DE COMPRA
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_Top5ProveedoresPorOrdenes
     @AnioInicio INT = NULL,
-    @AnioFin INT = NULL
+    @AnioFin INT = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Proveedores AS (
         SELECT
@@ -411,6 +450,7 @@ BEGIN
             (@AnioInicio IS NULL OR YEAR(O.OrderDate) >= @AnioInicio)
             AND
             (@AnioFin IS NULL OR YEAR(O.OrderDate) <= @AnioFin)
+            AND (@SucursalID IS NULL OR O.SucursalID = @SucursalID)
         GROUP BY
             O.SucursalID,
             O.PurchaseOrderID,
@@ -460,14 +500,21 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 06: MATRIZ DE VENTAS POR CATEGORÍA (PIVOT)
 -- ============================================================
 
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_MatrizVentasPorCategoria
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH VentasPorCategoria AS (
         SELECT
@@ -483,6 +530,7 @@ BEGIN
         INNER JOIN [Warehouse].[StockGroups] AS SG
             ON SG.StockGroupID = SISG.StockGroupID
         WHERE YEAR(F.InvoiceDate) BETWEEN 2013 AND 2016
+          AND (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
     )
     SELECT
         Categoria,
@@ -503,6 +551,7 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 07: SEGUIMIENTO DE COMPRAS POR CLIENTE
 -- ============================================================
@@ -511,10 +560,16 @@ CREATE OR ALTER PROCEDURE dbo.Rpt_sp_SeguimientoComprasCliente
     @Anio INT = NULL,
     @Mes INT = NULL,
     @Categoria NVARCHAR(100) = NULL,
-    @Subcategoria NVARCHAR(100) = NULL
+    @Subcategoria NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Clientes AS (
         SELECT
@@ -552,6 +607,7 @@ BEGIN
         WHERE
             (@Anio IS NULL OR YEAR(F.InvoiceDate) = @Anio)
             AND (@Mes IS NULL OR MONTH(F.InvoiceDate) = @Mes)
+            AND (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
             AND (
                 @Categoria IS NULL
                 OR EXISTS (
@@ -611,6 +667,7 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 08: SEGUIMIENTO DE COMPRAS POR PROVEEDOR
 -- ============================================================
@@ -619,10 +676,16 @@ CREATE OR ALTER PROCEDURE dbo.Rpt_sp_SeguimientoComprasProveedor
     @Anio INT = NULL,
     @Mes INT = NULL,
     @Categoria NVARCHAR(100) = NULL,
-    @Subcategoria NVARCHAR(100) = NULL
+    @Subcategoria NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Proveedores AS (
         SELECT
@@ -662,6 +725,7 @@ BEGIN
         WHERE
             (@Anio IS NULL OR YEAR(O.OrderDate) = @Anio)
             AND (@Mes IS NULL OR MONTH(O.OrderDate) = @Mes)
+            AND (@SucursalID IS NULL OR O.SucursalID = @SucursalID)
             AND (
                 @Categoria IS NULL
                 OR EXISTS (
@@ -721,6 +785,7 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 09: ROTACIÓN DE INVENTARIO POR PRODUCTO
 -- ============================================================
@@ -728,10 +793,16 @@ GO
 CREATE OR ALTER PROCEDURE dbo.Rpt_sp_RotacionInventario
     @Categoria NVARCHAR(100) = NULL,
     @Anio INT = NULL,
-    @Proveedor NVARCHAR(100) = NULL
+    @Proveedor NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Productos AS (
         SELECT
@@ -779,6 +850,8 @@ BEGIN
         INNER JOIN dbo.Vta_LineasFacturaUnificadas AS L
             ON L.InvoiceID = F.InvoiceID
            AND L.SucursalID = F.SucursalID
+        WHERE
+            (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
     ),
     VentasConAnterior AS (
         SELECT
@@ -851,6 +924,7 @@ BEGIN
 END;
 GO
 
+
 -- ============================================================
 -- REPORTE 10: MÉTODO DE ENVÍO FAVORITO POR ZONA
 -- ============================================================
@@ -860,10 +934,16 @@ CREATE OR ALTER PROCEDURE dbo.Rpt_sp_MetodoEnvioFavoritoPorZona
     @Mes INT = NULL,
     @CategoriaCliente NVARCHAR(100) = NULL,
     @CategoriaProducto NVARCHAR(100) = NULL,
-    @Producto NVARCHAR(100) = NULL
+    @Producto NVARCHAR(100) = NULL,
+    @SucursalID INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @SucursalID IS NOT NULL AND @SucursalID NOT IN (1, 2)
+    BEGIN
+        THROW 50051, 'SucursalID debe ser 1, 2 o NULL.', 1;
+    END;
 
     ;WITH Clientes AS (
         SELECT
@@ -930,6 +1010,7 @@ BEGIN
 
         WHERE
             F.IsCreditNote = 0
+            AND (@SucursalID IS NULL OR F.SucursalID = @SucursalID)
 
             AND (
                 @Anio IS NULL

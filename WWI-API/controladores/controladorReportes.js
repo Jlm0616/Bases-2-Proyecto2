@@ -1,13 +1,19 @@
+
 const { sql, conectarCorporativo } = require('../config/db');
 
 /**
- * Configuración de los 10 reportes disponibles en Corporativo
- * Cada reporte especifica su procedimiento almacenado y filtros permitidos
+ * Configuración de los 10 reportes disponibles en Corporativo.
+ *
+ * Todos los reportes admiten SucursalID:
+ * - NULL: Consolidado
+ * - 1: San José
+ * - 2: Limón
  */
 const reportes = {
   'montos-proveedores': {
     procedimiento: 'dbo.Rpt_sp_MontosProveedores',
     filtros: {
+      SucursalID: 'sucursal',
       NombreProveedor: 'texto',
       Categoria: 'texto'
     }
@@ -16,6 +22,7 @@ const reportes = {
   'montos-clientes': {
     procedimiento: 'dbo.Rpt_sp_MontosClientes',
     filtros: {
+      SucursalID: 'sucursal',
       NombreCliente: 'texto',
       Categoria: 'texto'
     }
@@ -24,6 +31,7 @@ const reportes = {
   'top5-productos-ganancia': {
     procedimiento: 'dbo.Rpt_sp_Top5ProductosPorGanancia',
     filtros: {
+      SucursalID: 'sucursal',
       Anio: 'numero'
     }
   },
@@ -31,6 +39,7 @@ const reportes = {
   'top5-clientes-facturas': {
     procedimiento: 'dbo.Rpt_sp_Top5ClientesPorFacturas',
     filtros: {
+      SucursalID: 'sucursal',
       AnioInicio: 'numero',
       AnioFin: 'numero'
     }
@@ -39,6 +48,7 @@ const reportes = {
   'top5-proveedores-ordenes': {
     procedimiento: 'dbo.Rpt_sp_Top5ProveedoresPorOrdenes',
     filtros: {
+      SucursalID: 'sucursal',
       AnioInicio: 'numero',
       AnioFin: 'numero'
     }
@@ -46,12 +56,15 @@ const reportes = {
 
   'matriz-ventas-categoria': {
     procedimiento: 'dbo.Rpt_sp_MatrizVentasPorCategoria',
-    filtros: {}
+    filtros: {
+      SucursalID: 'sucursal'
+    }
   },
 
   'seguimiento-compras-cliente': {
     procedimiento: 'dbo.Rpt_sp_SeguimientoComprasCliente',
     filtros: {
+      SucursalID: 'sucursal',
       Anio: 'numero',
       Mes: 'numero',
       Categoria: 'texto',
@@ -62,6 +75,7 @@ const reportes = {
   'seguimiento-compras-proveedor': {
     procedimiento: 'dbo.Rpt_sp_SeguimientoComprasProveedor',
     filtros: {
+      SucursalID: 'sucursal',
       Anio: 'numero',
       Mes: 'numero',
       Categoria: 'texto',
@@ -72,6 +86,7 @@ const reportes = {
   'rotacion-inventario': {
     procedimiento: 'dbo.Rpt_sp_RotacionInventario',
     filtros: {
+      SucursalID: 'sucursal',
       Categoria: 'texto',
       Anio: 'numero',
       Proveedor: 'texto'
@@ -81,6 +96,7 @@ const reportes = {
   'metodo-envio-favorito-zona': {
     procedimiento: 'dbo.Rpt_sp_MetodoEnvioFavoritoPorZona',
     filtros: {
+      SucursalID: 'sucursal',
       Anio: 'numero',
       Mes: 'numero',
       CategoriaCliente: 'texto',
@@ -91,22 +107,21 @@ const reportes = {
 };
 
 /**
- * Verifica que el usuario tenga rol Corporativo y esté en la sucursal Corporativo
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @returns {boolean} true si el usuario es Corporativo
+ * Verifica que el usuario tenga rol Corporativo
+ * y pertenezca a la sucursal Corporativo.
  */
 function usuarioCorporativo(solicitud) {
   const usuario = solicitud.session?.usuario;
 
-  return usuario &&
+  return Boolean(
+    usuario &&
     usuario.rol === 'Corporativo' &&
-    usuario.sucursal === 'Corporativo';
+    usuario.sucursal === 'Corporativo'
+  );
 }
 
 /**
- * Lista los reportes disponibles con sus filtros
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Lista los reportes disponibles y sus filtros.
  */
 function listarReportes(solicitud, respuesta) {
   if (!solicitud.session?.usuario) {
@@ -125,7 +140,7 @@ function listarReportes(solicitud, respuesta) {
 
   for (const [ruta, reporte] of Object.entries(reportes)) {
     lista.push({
-      ruta: ruta,
+      ruta,
       procedimiento: reporte.procedimiento,
       filtros: Object.keys(reporte.filtros)
     });
@@ -137,9 +152,7 @@ function listarReportes(solicitud, respuesta) {
 }
 
 /**
- * Ejecuta un reporte específico con los filtros proporcionados
- * @param {import('express').Request} solicitud - Objeto de solicitud Express
- * @param {import('express').Response} respuesta - Objeto de respuesta Express
+ * Ejecuta un reporte específico con los filtros proporcionados.
  */
 async function ejecutarReporte(solicitud, respuesta) {
   try {
@@ -156,9 +169,13 @@ async function ejecutarReporte(solicitud, respuesta) {
     }
 
     const nombre = solicitud.params.reporte;
+
     const reporte = Object.prototype.hasOwnProperty.call(
-      reportes, nombre
-    ) ? reportes[nombre] : null;
+      reportes,
+      nombre
+    )
+      ? reportes[nombre]
+      : null;
 
     if (!reporte) {
       return respuesta.status(404).json({
@@ -166,10 +183,14 @@ async function ejecutarReporte(solicitud, respuesta) {
       });
     }
 
+    // Verificar que todos los filtros enviados estén permitidos.
     for (const nombreFiltro of Object.keys(solicitud.query)) {
-      if (!Object.prototype.hasOwnProperty.call(
-        reporte.filtros, nombreFiltro
-      )) {
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          reporte.filtros,
+          nombreFiltro
+        )
+      ) {
         return respuesta.status(400).json({
           mensaje: `Filtro no admitido: ${nombreFiltro}`
         });
@@ -177,9 +198,8 @@ async function ejecutarReporte(solicitud, respuesta) {
     }
 
     const parametros = {};
-    const conexion = await conectarCorporativo();
-    const peticion = conexion.request();
 
+    // Validar todos los parámetros antes de conectarse a SQL Server.
     for (const [filtro, tipo] of Object.entries(reporte.filtros)) {
       let valor = solicitud.query[filtro];
 
@@ -193,6 +213,19 @@ async function ejecutarReporte(solicitud, respuesta) {
         });
       }
 
+      // Validación específica del filtro de sucursal.
+      if (tipo === 'sucursal' && valor !== null) {
+        if (valor !== '1' && valor !== '2') {
+          return respuesta.status(400).json({
+            mensaje:
+              'La sucursal debe ser 1 (San José) o 2 (Limón)'
+          });
+        }
+
+        valor = Number(valor);
+      }
+
+      // Validación de años y meses.
       if (tipo === 'numero' && valor !== null) {
         if (!/^\d+$/.test(valor)) {
           return respuesta.status(400).json({
@@ -202,7 +235,11 @@ async function ejecutarReporte(solicitud, respuesta) {
 
         valor = Number(valor);
 
-        if (!Number.isInteger(valor) || valor < 1 || valor > 9999) {
+        if (
+          !Number.isInteger(valor) ||
+          valor < 1 ||
+          valor > 9999
+        ) {
           return respuesta.status(400).json({
             mensaje: `Valor no válido para ${filtro}`
           });
@@ -215,28 +252,42 @@ async function ejecutarReporte(solicitud, respuesta) {
         }
       }
 
-      if (tipo === 'texto' && valor !== null &&
-          valor.length > 100) {
-        return respuesta.status(400).json({
-          mensaje: `${filtro} supera los 100 caracteres`
-        });
+      // Validación de los filtros de texto.
+      if (tipo === 'texto' && valor !== null) {
+        if (valor.length > 100) {
+          return respuesta.status(400).json({
+            mensaje: `${filtro} supera los 100 caracteres`
+          });
+        }
       }
 
       parametros[filtro] = valor;
+    }
 
-      if (tipo === 'numero') {
+    // Validar rangos de años.
+    if (
+      parametros.AnioInicio != null &&
+      parametros.AnioFin != null &&
+      parametros.AnioInicio > parametros.AnioFin
+    ) {
+      return respuesta.status(400).json({
+        mensaje: 'Rango de años no válido'
+      });
+    }
+
+    // Conectar al nodo Corporativo.
+    const conexion = await conectarCorporativo();
+    const peticion = conexion.request();
+
+    // Enviar los parámetros al procedimiento almacenado.
+    for (const [filtro, tipo] of Object.entries(reporte.filtros)) {
+      const valor = parametros[filtro];
+
+      if (tipo === 'numero' || tipo === 'sucursal') {
         peticion.input(filtro, sql.Int, valor);
       } else {
         peticion.input(filtro, sql.NVarChar(100), valor);
       }
-    }
-
-    if (parametros.AnioInicio != null &&
-        parametros.AnioFin != null &&
-        parametros.AnioInicio > parametros.AnioFin) {
-      return respuesta.status(400).json({
-        mensaje: 'Rango de años no válido'
-      });
     }
 
     const resultado = await peticion.execute(
@@ -253,6 +304,7 @@ async function ejecutarReporte(solicitud, respuesta) {
 
   } catch (error) {
     console.error('Error al ejecutar reporte:', error);
+
     return respuesta.status(500).json({
       mensaje: 'No se pudo generar el reporte'
     });

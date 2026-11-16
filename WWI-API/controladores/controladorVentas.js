@@ -337,8 +337,36 @@ async function crearVenta(solicitud, respuesta) {
 
   } catch (error) {
     console.error('Error al crear venta:', error);
+
+    const codigo = Number(error.number ?? error.originalError?.number);
+    const mensajes = {
+      50001: 'El cliente no existe en esta sucursal.',
+      50002: 'La persona de contacto no existe.',
+      50003: 'El vendedor no existe.',
+      50004: 'El editor no existe.',
+      50005: 'La persona de cuentas no existe.',
+      50006: 'La persona que empaca no existe.',
+      50007: 'El método de entrega no existe.',
+      50008: 'La factura requiere al menos un producto.',
+      50009: 'Hay una cantidad o precio inválido.',
+      50010: 'Hay productos repetidos; agrupe sus cantidades.',
+      50011: 'Uno de los productos seleccionados no existe.',
+      50012: 'El tipo de empaque seleccionado no existe.',
+      50013: 'Inventario insuficiente o inexistente para uno de los productos. Revise las cantidades solicitadas.',
+      50014: 'No se pudo generar el número de factura. Contacte al administrador.',
+      50015: 'No se pudo generar el número de línea. Contacte al administrador.'
+    };
+
+    if (Object.prototype.hasOwnProperty.call(mensajes, codigo)) {
+      const errorConfiguracion = codigo === 50014 || codigo === 50015;
+      return respuesta.status(errorConfiguracion ? 500 : 400).json({
+        mensaje: mensajes[codigo],
+        codigo
+      });
+    }
+
     return respuesta.status(500).json({
-      mensaje: 'No se pudo crear la venta'
+      mensaje: 'No se pudo crear la venta. Intente nuevamente o contacte al administrador.'
     });
   }
 }
